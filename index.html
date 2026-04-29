@@ -67,7 +67,14 @@ body{font-family:'Inter',system-ui,sans-serif;background:#eef5f5;color:#1a2e2e;m
 .layout{display:flex;min-height:100vh;}
 
 /* SIDEBAR */
-.sidebar{width:240px;background:linear-gradient(180deg,#002e2e,#004f4f,#006b6b);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:60;box-shadow:4px 0 20px rgba(0,0,0,.18);}
+.sidebar{width:240px;background:linear-gradient(180deg,#002e2e,#004f4f,#006b6b);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:60;box-shadow:4px 0 20px rgba(0,0,0,.18);transition:width .25s cubic-bezier(.4,0,.2,1);}
+.sidebar.collapsed{width:60px;}
+.sidebar.collapsed .sb-app-name,.sidebar.collapsed .sb-app-sub,.sidebar.collapsed .sb-dept,.sidebar.collapsed .sb-nav,.sidebar.collapsed .sb-footer{display:none;}
+.sidebar.collapsed .sb-brand{padding:14px 10px;border-bottom:none;}
+.sidebar.collapsed .sb-brand-row{justify-content:center;margin-bottom:0;gap:0;}
+.sb-toggle{background:none;border:none;cursor:pointer;width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.6);font-size:16px;transition:all .18s;margin-left:auto;flex-shrink:0;}
+.sb-toggle:hover{background:rgba(255,255,255,.12);color:#fff;}
+.sidebar.collapsed .sb-toggle{margin-left:0;}
 .sb-brand{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.08);}
 .sb-brand-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .sb-logo-box{width:34px;height:34px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;}
@@ -90,7 +97,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:#eef5f5;color:#1a2e2e;m
 .sb-out:hover{background:rgba(255,80,80,.18);border-color:rgba(255,100,100,.25);color:#ff9999;}
 
 /* MAIN */
-.main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
+.main{margin-left:240px;flex:1;display:flex;flex-direction:column;transition:margin-left .25s cubic-bezier(.4,0,.2,1);}
+.main.sb-collapsed{margin-left:60px;}
 
 /* TOPBAR */
 .topbar{background:#fff;border-bottom:1.5px solid #dff0f0;height:64px;padding:0 26px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 1px 8px rgba(0,107,107,.07);}
@@ -311,6 +319,23 @@ body{font-family:'Inter',system-ui,sans-serif;background:#eef5f5;color:#1a2e2e;m
 
 @media(max-width:900px){.dcg{grid-template-columns:repeat(3,1fr);}.bva-grid{grid-template-columns:1fr;}}
 @media(max-width:700px){.lcard{flex-direction:column;max-width:420px;}.lcard-left{width:100%;padding:24px 20px 18px;}.sidebar{display:none;}.main{margin-left:0;}.kpi-row{grid-template-columns:1fr 1fr;}.kpi-row-3{grid-template-columns:1fr 1fr;}.g2{grid-template-columns:1fr;}.g31{grid-template-columns:1fr;}.dcg{grid-template-columns:repeat(2,1fr);}}
+/* CRED GRID */
+.cred-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+@media(max-width:900px){.cred-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){.cred-grid{grid-template-columns:1fr;}}
+.cred-card{background:#fff;border-radius:14px;border:1.5px solid #e4f0f0;padding:18px;box-shadow:0 2px 10px rgba(0,107,107,.06);transition:transform .18s,box-shadow .18s;}
+.cred-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,107,107,.1);}
+.cred-card-hd{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.cred-card-ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.cred-card-lbl{font-size:13px;font-weight:700;color:#1a2e2e;}
+.cred-field{margin-bottom:10px;}
+.cred-field-lbl{font-size:10px;color:#5A7070;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:4px;}
+.cred-field-val{display:flex;align-items:center;gap:6px;background:#f0f8f8;border:1.5px solid #dff0f0;border-radius:8px;padding:7px 10px;}
+.cred-field-txt{flex:1;font-size:13px;font-weight:600;color:#1a2e2e;font-family:monospace;letter-spacing:.5px;}
+.cred-eye{background:none;border:none;cursor:pointer;font-size:14px;color:#5A7070;padding:0 2px;transition:color .15s;}
+.cred-eye:hover{color:#006B6B;}
+.cred-reset-btn{width:100%;margin-top:4px;background:linear-gradient(135deg,#b88c30,#D4A843);color:#fff;border:none;border-radius:9px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .18s;}
+.cred-reset-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(212,168,67,.36);}
 ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#c8e0e0;border-radius:3px;}
 </style>
 </head>
@@ -322,15 +347,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#eef5f5;color:#1a2e2e;m
     <div class="lcard-left">
       <div class="ll-title">GITAM<br>Vendor Bills</div>
       <div class="ll-sub">Tap a department to sign in instantly</div>
-      <div class="ll-list">
-        <div class="ll-item" onclick="ql('hk','1111')"><span class="ll-icon">🧹</span><div class="ll-info"><div class="ll-name">Housekeeping</div><div class="ll-cred">hk &nbsp;·&nbsp; 1111</div></div><span class="ll-arr">›</span></div>
-        <div class="ll-item" onclick="ql('rm','2222')"><span class="ll-icon">🔧</span><div class="ll-info"><div class="ll-name">Repair &amp; Maintenance</div><div class="ll-cred">rm &nbsp;·&nbsp; 2222</div></div><span class="ll-arr">›</span></div>
-        <div class="ll-item" onclick="ql('fb','3333')"><span class="ll-icon">🍽</span><div class="ll-info"><div class="ll-name">F&amp;B Service</div><div class="ll-cred">fb &nbsp;·&nbsp; 3333</div></div><span class="ll-arr">›</span></div>
-        <div class="ll-item" onclick="ql('tr','4444')"><span class="ll-icon">🚗</span><div class="ll-info"><div class="ll-name">Transport</div><div class="ll-cred">tr &nbsp;·&nbsp; 4444</div></div><span class="ll-arr">›</span></div>
-        <div class="ll-item" onclick="ql('res','5555')"><span class="ll-icon">🏠</span><div class="ll-info"><div class="ll-name">Residence</div><div class="ll-cred">res &nbsp;·&nbsp; 5555</div></div><span class="ll-arr">›</span></div>
-        <div class="ll-item" onclick="ql('hr','6666')"><span class="ll-icon">👥</span><div class="ll-info"><div class="ll-name">HR</div><div class="ll-cred">hr &nbsp;·&nbsp; 6666</div></div><span class="ll-arr">›</span></div>
-        <div class="ll-item adm" onclick="ql('admin','0000')"><span class="ll-icon">👑</span><div class="ll-info"><div class="ll-name">Admin — Master</div><div class="ll-cred">admin &nbsp;·&nbsp; 0000</div></div><span class="ll-arr">›</span></div>
-      </div>
+      <div class="ll-list" id="llList"></div>
       <div class="ll-foot">GITAM Vendor Bills Register © 2025</div>
     </div>
     <div class="lcard-right">
@@ -349,9 +366,9 @@ body{font-family:'Inter',system-ui,sans-serif;background:#eef5f5;color:#1a2e2e;m
 <div id="appWrap">
 <div class="layout">
 
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
   <div class="sb-brand">
-    <div class="sb-brand-row"><div class="sb-logo-box">📋</div><div><div class="sb-app-name">Vendor Bills</div><div class="sb-app-sub">GITAM Register</div></div></div>
+    <div class="sb-brand-row"><div class="sb-logo-box">📋</div><div><div class="sb-app-name">Vendor Bills</div><div class="sb-app-sub">GITAM Register</div></div><button class="sb-toggle" onclick="toggleSidebar()" id="sbToggle" title="Collapse sidebar">‹</button></div>
     <div class="sb-dept" id="sbDept">—</div>
   </div>
   <nav class="sb-nav" id="sbNav"></nav>
@@ -431,7 +448,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#eef5f5;color:#1a2e2e;m
 
   <!-- ADMIN -->
   <div class="page" id="page-admin">
-    <div class="adm-banner"><div class="adm-banner-ic">👑</div><div><div class="adm-banner-title">Admin Master Dashboard</div><div class="adm-banner-sub">Consolidated — All 6 Departments</div></div><div class="adm-banner-r"><button class="tbtn tbtn-s" onclick="exportAdminCSV()">⬇ CSV</button><button class="tbtn tbtn-g" onclick="exportAdminExcel()">⬇ Export All Excel</button></div></div>
+    <div class="adm-banner"><div class="adm-banner-ic">👑</div><div><div class="adm-banner-title">Admin Master Dashboard</div><div class="adm-banner-sub">Consolidated — All 6 Departments</div></div><div class="adm-banner-r"><button class="tbtn tbtn-s" onclick="exportAdminCSV()">⬇ CSV</button><button class="tbtn" style="background:linear-gradient(135deg,#003535,#006B6B);color:#fff;box-shadow:0 2px 8px rgba(0,107,107,.22);" onclick="openCredModal()">🔑 Credentials</button><button class="tbtn tbtn-g" onclick="exportAdminExcel()">⬇ Export All Excel</button></div></div>
     <div class="kpi-row">
       <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,#D4A843,#FFD875)"></div><div class="kpi-ico">🧾</div><div class="kpi-lbl">Total Bills</div><div class="kpi-val" id="adm-b">0</div><div class="kpi-sub">All depts</div></div>
       <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,#006B6B,#4ECDC4)"></div><div class="kpi-ico">💰</div><div class="kpi-lbl">Grand Total</div><div class="kpi-val" id="adm-t">₹0</div><div class="kpi-sub">Combined</div></div>
@@ -458,6 +475,30 @@ body{font-family:'Inter',system-ui,sans-serif;background:#eef5f5;color:#1a2e2e;m
   </div>
 </div>
 </div>
+</div>
+
+<!-- CREDENTIALS MODAL -->
+<div class="overlay" id="credModal">
+  <div class="modal" style="max-width:780px;">
+    <div class="modal-hd"><div class="modal-ttl">🔑 Department Credentials</div><button class="modal-x" onclick="closeCredModal()">✕</button></div>
+    <div style="background:#f0f8f8;border:1.5px solid #c8e0e0;border-radius:10px;padding:10px 14px;font-size:12px;color:#004F4F;margin-bottom:16px;">Click the 👁 eye to reveal a password · Click <strong>✏️ Reset</strong> to change username or password for a department.</div>
+    <div class="cred-grid" id="credGrid"></div>
+  </div>
+</div>
+
+<!-- RESET CREDENTIAL MODAL -->
+<div class="overlay" id="resetCredModal">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-ttl" id="rcTtl">Reset Credentials</div><button class="modal-x" onclick="closeResetCred()">✕</button></div>
+    <div style="background:#fff8e8;border:1.5px solid #f5d87a;border-radius:10px;padding:11px 14px;font-size:12px;color:#7a5c00;margin-bottom:16px;">⚠️ Share updated credentials with the department after saving.</div>
+    <div class="fg" style="margin-bottom:13px;"><label class="fl">Department</label><input class="fi" type="text" id="rc-dept" readonly style="background:#f0f8f8;color:#5A7070;"></div>
+    <div class="fg2" style="margin-bottom:13px;">
+      <div class="fg"><label class="fl">New Username *</label><input class="fi" type="text" id="rc-un" placeholder="e.g. housekeeping" autocomplete="off"></div>
+      <div class="fg"><label class="fl">New Password *</label><input class="fi" type="text" id="rc-pw" placeholder="e.g. hk@2025" autocomplete="off"></div>
+    </div>
+    <div class="fg" style="margin-bottom:13px;"><label class="fl">Confirm Password *</label><input class="fi" type="text" id="rc-pw2" placeholder="Re-enter new password" autocomplete="off"></div>
+    <div class="f-acts"><button class="f-cancel" onclick="closeResetCred()">Cancel</button><button class="f-save" onclick="saveCredential()">💾 Save Credentials</button></div>
+  </div>
 </div>
 
 <!-- BILL MODAL -->
@@ -524,7 +565,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#eef5f5;color:#1a2e2e;m
 <div id="toast">Saved</div>
 
 <script>
-var DEPTS={hk:{pw:'1111',label:'Housekeeping',icon:'🧹',color:'#27AE60',sk:'gb_hk',bk:'gb_hk_b'},rm:{pw:'2222',label:'Repair & Maintenance',icon:'🔧',color:'#2980B9',sk:'gb_rm',bk:'gb_rm_b'},fb:{pw:'3333',label:'F&B Service',icon:'🍽',color:'#8b3a8b',sk:'gb_fb',bk:'gb_fb_b'},tr:{pw:'4444',label:'Transport',icon:'🚗',color:'#E67E22',sk:'gb_tr',bk:'gb_tr_b'},res:{pw:'5555',label:'Residence',icon:'🏠',color:'#006B6B',sk:'gb_res',bk:'gb_res_b'},hr:{pw:'6666',label:'HR',icon:'👥',color:'#C0392B',sk:'gb_hr',bk:'gb_hr_b'}};
+var DEPTS={hk:{un:'hk',pw:'1111',label:'Housekeeping',icon:'🧹',color:'#27AE60',sk:'gb_hk',bk:'gb_hk_b'},rm:{un:'rm',pw:'2222',label:'Repair & Maintenance',icon:'🔧',color:'#2980B9',sk:'gb_rm',bk:'gb_rm_b'},fb:{un:'fb',pw:'3333',label:'F&B Service',icon:'🍽',color:'#8b3a8b',sk:'gb_fb',bk:'gb_fb_b'},tr:{un:'tr',pw:'4444',label:'Transport',icon:'🚗',color:'#E67E22',sk:'gb_tr',bk:'gb_tr_b'},res:{un:'res',pw:'5555',label:'Residence',icon:'🏠',color:'#006B6B',sk:'gb_res',bk:'gb_res_b'},hr:{un:'hr',pw:'6666',label:'HR',icon:'👥',color:'#C0392B',sk:'gb_hr',bk:'gb_hr_b'}};
 var ADMIN={un:'admin',pw:'0000'};
 var DO=['hk','rm','fb','tr','res','hr'];
 var MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -541,16 +582,17 @@ async function doLogin(){
     await loadAllDeptBills();
     initAdm();return;
   }
-  if(DEPTS[u]&&DEPTS[u].pw===p){
-    CU=u;isAdm=false;
+  var matchKey=null;
+  DO.forEach(function(k){if(DEPTS[k].un===u&&DEPTS[k].pw===p)matchKey=k;});
+  if(matchKey){
+    CU=matchKey;isAdm=false;
     bills=[];budgets=[];
     initDept();
-    // Load bills + budgets in background — app is instantly usable
     fbLoading('Loading your data…');
     try{
       var results=await Promise.all([
-        window._db.collection('depts/'+u+'/bills').get(),
-        window._db.collection('depts/'+u+'/budgets').get()
+        window._db.collection('depts/'+CU+'/bills').get(),
+        window._db.collection('depts/'+CU+'/budgets').get()
       ]);
       bills=[];results[0].forEach(function(d){bills.push(d.data());});
       budgets=[];results[1].forEach(function(d){budgets.push(d.data());});
@@ -579,13 +621,15 @@ function initAdm(){
   showApp();goPage('admin');renderAdmin();
 }
 function ni(pg,ic,lb){return'<div class="ni" id="ni-'+pg+'" onclick="goPage(\''+pg+'\',this)"><span class="ni-icon">'+ic+'</span>'+lb+'</div>';}
+function toggleSidebar(){var sb=document.getElementById('sidebar'),mn=document.querySelector('.main'),btn=document.getElementById('sbToggle'),collapsed=sb.classList.toggle('collapsed');mn.classList.toggle('sb-collapsed',collapsed);btn.textContent=collapsed?'›':'‹';btn.title=collapsed?'Expand sidebar':'Collapse sidebar';}
+
 function showApp(){document.getElementById('loginWrap').style.display='none';document.getElementById('appWrap').style.display='block';}
 function goPage(id,el){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});var pg=document.getElementById('page-'+id);if(pg)pg.classList.add('active');
   document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active');});if(el)el.classList.add('active');else{var n=document.getElementById('ni-'+id);if(n)n.classList.add('active');}
   var T={dashboard:'Dashboard',bills:'All Bills',budget:'Budget vs Actuals',admin:'Master Dashboard'};
   document.getElementById('tbTitle').textContent=T[id]||id;document.getElementById('tbPg').textContent=T[id]||id;
-  if(id==='budget')renderBudget();if(id==='admin')renderAdmin();
+  if(id==='budget')renderBudget();if(id==='admin')renderAdmin();if(id==='dashboard'&&!isAdm)updateAll();
 }
 
 // ── Firebase helpers (compat SDK) ────────────────────────────────
@@ -629,6 +673,7 @@ async function sv(billId, del){
       await docRef.set(docData);
     }
   }catch(e){console.error('sv error',e);toast('Save error: '+e.message,'err');}
+  fbDone();
 }
 
 // Save or delete a single budget — 1 Firestore write
@@ -684,7 +729,7 @@ function openBill(){editId=null;cFile=null;document.getElementById('bmTtl').text
 function openEdit(id){var b=bills.find(function(x){return x.id===id;});if(!b)return;editId=id;cFile=null;document.getElementById('bmTtl').textContent='Edit Vendor Bill';document.getElementById('f-sd').value=b.submissionDate||'';document.getElementById('f-id').value=b.invoiceDate||'';document.getElementById('f-ino').value=b.invoiceNo||'';document.getElementById('f-po').value=b.poNumber||'';document.getElementById('f-vn').value=b.vendorName||'';document.getElementById('f-pt').value=b.particulars||'';document.getElementById('f-am').value=b.amount||'';document.getElementById('f-fi').value='';var fp=document.getElementById('filePrev');if(b.fileName){fp.style.display='block';fp.textContent='📎 '+b.fileName;}else fp.style.display='none';document.getElementById('billModal').classList.add('open');}
 function closeBM2(){document.getElementById('billModal').classList.remove('open');}
 function onFile(input){var fp=document.getElementById('filePrev');if(input.files&&input.files[0]){var f=input.files[0];var r=new FileReader();r.onload=function(e){cFile={name:f.name,data:e.target.result};};r.readAsDataURL(f);fp.style.display='block';fp.textContent='📎 '+f.name;}else{cFile=null;fp.style.display='none';}}
-async function saveBill(){var sd=document.getElementById('f-sd').value,ino=document.getElementById('f-ino').value.trim(),vn=document.getElementById('f-vn').value.trim(),am=document.getElementById('f-am').value;if(!sd||!ino||!vn||!am){toast('Fill in required fields','err');return;}var data={submissionDate:sd,invoiceDate:document.getElementById('f-id').value,invoiceNo:ino,poNumber:document.getElementById('f-po').value.trim(),vendorName:vn,particulars:document.getElementById('f-pt').value.trim(),amount:parseFloat(am)};if(cFile){data.fileName=cFile.name;data.fileData=cFile.data;}if(editId){var idx=bills.findIndex(function(b){return b.id===editId;});var ex=bills[idx];if(!cFile){if(ex.fileData){data.fileName=ex.fileName;data.fileData=ex.fileData;}if(ex.fileURL){data.fileName=data.fileName||ex.fileName;data.fileURL=ex.fileURL;data.storagePath=ex.storagePath;}}bills[idx]=Object.assign({},ex,data);toast('Bill updated ✓');await sv(editId);}else{data.id='b'+Date.now();bills.push(data);toast('Bill added ✓');await sv(data.id);}closeBM2();updateAll();}
+async function saveBill(){var sd=document.getElementById('f-sd').value,ino=document.getElementById('f-ino').value.trim(),vn=document.getElementById('f-vn').value.trim(),am=document.getElementById('f-am').value;if(!sd||!ino||!vn||!am){toast('Fill in required fields','err');return;}var data={submissionDate:sd,invoiceDate:document.getElementById('f-id').value,invoiceNo:ino,poNumber:document.getElementById('f-po').value.trim(),vendorName:vn,particulars:document.getElementById('f-pt').value.trim(),amount:parseFloat(am)};if(cFile){data.fileName=cFile.name;data.fileData=cFile.data;}if(editId){var idx=bills.findIndex(function(b){return b.id===editId;});var ex=bills[idx];if(!cFile){if(ex.fileData){data.fileName=ex.fileName;data.fileData=ex.fileData;}if(ex.fileURL){data.fileName=data.fileName||ex.fileName;data.fileURL=ex.fileURL;data.storagePath=ex.storagePath;}}bills[idx]=Object.assign({},ex,data);toast('Bill updated ✓');closeBM2();updateAll();await sv(editId);updateAll();}else{data.id='b'+Date.now();bills.push(data);toast('Bill added ✓');closeBM2();updateAll();await sv(data.id);updateAll();}}
 function askDel(id){delId=id;document.getElementById('delModal').classList.add('open');}
 function closeDelM(){document.getElementById('delModal').classList.remove('open');delId=null;}
 async function confirmDel(){var id=delId;bills=bills.filter(function(b){return b.id!==id;});await sv(id,true);closeDelM();updateAll();toast('Bill deleted');}
@@ -717,8 +762,84 @@ function fa(n){if(!n||isNaN(n))return'0';if(n>=10000000)return(n/10000000).toFix
 function fas(n){if(n>=10000000)return(n/10000000).toFixed(1)+'Cr';if(n>=100000)return(n/100000).toFixed(1)+'L';if(n>=1000)return(n/1000).toFixed(1)+'k';return Math.round(n);}
 function fd(d){if(!d)return'—';var p=d.split('-');if(p.length!==3)return d;return p[2]+' '+MO[parseInt(p[1])-1]+' '+p[0];}
 function esc(s){return(s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+var _rcKey=null; // dept key being reset
+
+// ── Credentials: load from Firestore, fallback to defaults ──────
+async function loadCredentials(){
+  try{
+    var snap=await window._db.collection('config').doc('credentials').get();
+    if(snap.exists){
+      var data=snap.data();
+      DO.forEach(function(k){if(data[k]){if(data[k].un)DEPTS[k].un=data[k].un;if(data[k].pw)DEPTS[k].pw=data[k].pw;}});
+      if(data._admin){if(data._admin.un)ADMIN.un=data._admin.un;if(data._admin.pw)ADMIN.pw=data._admin.pw;}
+    }
+  }catch(e){console.error('loadCredentials error',e);}
+  renderLoginButtons();
+}
+
+function renderLoginButtons(){
+  var list=document.getElementById('llList');
+  if(!list)return;
+  list.innerHTML=DO.map(function(k){var d=DEPTS[k];return'<div class="ll-item" onclick="ql(\''+esc(d.un)+'\',\''+esc(d.pw)+'\')"><span class="ll-icon">'+d.icon+'</span><div class="ll-info"><div class="ll-name">'+esc(d.label)+'</div></div><span class="ll-arr">›</span></div>';}).join('')+'<div class="ll-item adm" onclick="ql(\''+esc(ADMIN.un)+'\',\''+esc(ADMIN.pw)+'\')"><span class="ll-icon">👑</span><div class="ll-info"><div class="ll-name">Admin — Master</div></div><span class="ll-arr">›</span></div>';
+}
+
+function openCredModal(){renderCredentials();document.getElementById('credModal').classList.add('open');}
+function closeCredModal(){document.getElementById('credModal').classList.remove('open');}
+
+function renderCredentials(){
+  var el=document.getElementById('credGrid');if(!el)return;
+  el.innerHTML=DO.map(function(k){var d=DEPTS[k];return'<div class="cred-card"><div class="cred-card-hd"><div class="cred-card-ic" style="background:'+d.color+'18;border:1.5px solid '+d.color+'33;">'+d.icon+'</div><div class="cred-card-lbl">'+esc(d.label)+'</div></div><div class="cred-field"><div class="cred-field-lbl">Username</div><div class="cred-field-val"><span class="cred-field-txt" id="cu-'+k+'">'+esc(d.un)+'</span></div></div><div class="cred-field"><div class="cred-field-lbl">Password</div><div class="cred-field-val"><span class="cred-field-txt" id="cp-'+k+'">••••••</span><button class="cred-eye" onclick="togglePw(\''+k+'\',\''+esc(d.pw)+'\')" id="ceye-'+k+'" title="Show / hide">👁</button></div></div><button class="cred-reset-btn" onclick="openResetCred(\''+k+'\')">✏️ Reset Credentials</button></div>';}).join('');
+}
+
+function togglePw(k,pw){
+  var el=document.getElementById('cp-'+k);
+  var isHidden=el.textContent==='••••••';
+  el.textContent=isHidden?pw:'••••••';
+}
+
+function openResetCred(k){
+  _rcKey=k;var d=DEPTS[k];
+  document.getElementById('rcTtl').textContent='Reset: '+d.icon+' '+d.label;
+  document.getElementById('rc-dept').value=d.label;
+  document.getElementById('rc-un').value=d.un;
+  document.getElementById('rc-pw').value='';
+  document.getElementById('rc-pw2').value='';
+  document.getElementById('resetCredModal').classList.add('open');
+}
+function closeResetCred(){document.getElementById('resetCredModal').classList.remove('open');_rcKey=null;}
+
+async function saveCredential(){
+  if(!_rcKey)return;
+  var un=document.getElementById('rc-un').value.trim(),pw=document.getElementById('rc-pw').value.trim(),pw2=document.getElementById('rc-pw2').value.trim();
+  if(!un||!pw){toast('Username and password are required','err');return;}
+  if(pw!==pw2){toast('Passwords do not match','err');return;}
+  // Check username not already used by another dept or admin
+  var conflict=false;
+  DO.forEach(function(k){if(k!==_rcKey&&DEPTS[k].un===un)conflict=true;});
+  if(ADMIN.un===un)conflict=true;
+  if(conflict){toast('Username already in use by another user','err');return;}
+  fbLoading('Saving credentials…');
+  DEPTS[_rcKey].un=un;DEPTS[_rcKey].pw=pw;
+  try{
+    var update={};
+    DO.forEach(function(k){update[k]={un:DEPTS[k].un,pw:DEPTS[k].pw};});
+    update['_admin']={un:ADMIN.un,pw:ADMIN.pw};
+    await window._db.collection('config').doc('credentials').set(update);
+    toast('Credentials updated ✓');
+    renderCredentials();
+    renderLoginButtons();
+    closeResetCred();
+    openCredModal();
+  }catch(e){toast('Save error: '+e.message,'err');}
+  fbDone();
+}
+
+// Bootstrap: load credentials before login is interactive
+window.addEventListener('DOMContentLoaded',function(){loadCredentials();});
+
 var _tt=null;
 function toast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className=type||'';void t.offsetWidth;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(function(){t.classList.remove('show');},2600);}
+
 
 
 </script>
