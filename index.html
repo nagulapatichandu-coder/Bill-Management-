@@ -5,6 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GITAM — Vendor Bills Register</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBvUz9ofE4QvuGMeMj4wVK8TOXzYKsJEdk",
+    authDomain: "bill-management-5c07d.firebaseapp.com",
+    projectId: "bill-management-5c07d",
+    storageBucket: "bill-management-5c07d.firebasestorage.app",
+    messagingSenderId: "868034603988",
+    appId: "1:868034603988:web:1a4bc1a8e00d81f94f8441",
+    measurementId: "G-ZMRQE4YWWY"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  window._db = db;
+  window._fsCollection = collection;
+  window._fsDoc = doc;
+  window._fsGetDocs = getDocs;
+  window._fsSetDoc = setDoc;
+  window._fsDeleteDoc = deleteDoc;
+  window._dbReady = true;
+  document.dispatchEvent(new Event('firebase-ready'));
+</script>
+<style>
+#fbLoader{position:fixed;inset:0;background:rgba(0,43,43,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;}
+#fbLoader.hide{display:none;}
+.fbl-spinner{width:44px;height:44px;border:4px solid rgba(255,255,255,.15);border-top-color:#4ECDC4;border-radius:50%;animation:spin .75s linear infinite;margin-bottom:16px;}
+.fbl-txt{font-family:'Inter',sans-serif;font-size:14px;color:rgba(255,255,255,.7);font-weight:500;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+<div id="fbLoader"><div class="fbl-spinner"></div><div class="fbl-txt" id="fblTxt">Connecting to database…</div></div>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -512,11 +545,28 @@ var CLR=['#006B6B','#27AE60','#2980B9','#D4A843','#8b3a8b','#E67E22','#C0392B','
 var CU=null,isAdm=false,bills=[],budgets=[],editId=null,delId=null,eBId=null,dBId=null,sF='submissionDate',sD=-1,aSF='submissionDate',aSD=-1,cFile=null;
 
 function ql(u,p){document.getElementById('luser').value=u;document.getElementById('lpass').value=p;document.getElementById('lerr').classList.remove('show');doLogin();}
-function doLogin(){
+async function doLogin(){
   var u=document.getElementById('luser').value.trim().toLowerCase(),p=document.getElementById('lpass').value.trim();
   document.getElementById('lerr').classList.remove('show');
-  if(u===ADMIN.un&&p===ADMIN.pw){CU='admin';isAdm=true;initAdm();return;}
-  if(DEPTS[u]&&DEPTS[u].pw===p){CU=u;isAdm=false;var s=localStorage.getItem(DEPTS[u].sk);try{bills=s?JSON.parse(s):[];}catch(e){bills=[];}var bs=localStorage.getItem(DEPTS[u].bk);try{budgets=bs?JSON.parse(bs):[];}catch(e){budgets=[];}initDept();return;}
+  if(!window._dbReady){toast('Database not ready yet, please wait','err');return;}
+  if(u===ADMIN.un&&p===ADMIN.pw){
+    CU='admin';isAdm=true;
+    await loadAllDeptBills();
+    initAdm();return;
+  }
+  if(DEPTS[u]&&DEPTS[u].pw===p){
+    CU=u;isAdm=false;
+    fbLoading('Loading your bills…');
+    try{
+      var db=window._db,col=window._fsCollection,gd=window._fsGetDocs;
+      var bSnap=await gd(col(db,'depts/'+u+'/bills'));
+      bills=[];bSnap.forEach(function(d){bills.push(d.data());});
+      var bgSnap=await gd(col(db,'depts/'+u+'/budgets'));
+      budgets=[];bgSnap.forEach(function(d){budgets.push(d.data());});
+    }catch(e){bills=[];budgets=[];console.error('login load error',e);}
+    fbDone();
+    initDept();return;
+  }
   document.getElementById('lerr').classList.add('show');
 }
 function doLogout(){CU=null;isAdm=false;bills=[];budgets=[];document.getElementById('luser').value='';document.getElementById('lpass').value='';document.getElementById('appWrap').style.display='none';document.getElementById('loginWrap').style.display='flex';}
@@ -546,9 +596,66 @@ function goPage(id,el){
   if(id==='budget')renderBudget();if(id==='admin')renderAdmin();
 }
 
-function sv(){if(!CU||isAdm)return;localStorage.setItem(DEPTS[CU].sk,JSON.stringify(bills));}
-function svb(){if(!CU||isAdm)return;localStorage.setItem(DEPTS[CU].bk,JSON.stringify(budgets));}
-function getAllBills(){var all=[];DO.forEach(function(k){var s=localStorage.getItem(DEPTS[k].sk);var arr;try{arr=s?JSON.parse(s):[];}catch(e){arr=[];}arr.forEach(function(b){all.push(Object.assign({},b,{_dk:k,_dl:DEPTS[k].label,_di:DEPTS[k].icon,_dc:DEPTS[k].color}));});});return all;}
+// ── Firebase helpers ──────────────────────────────────────────────
+function fbLoading(msg){var el=document.getElementById('fbLoader');var tx=document.getElementById('fblTxt');if(el)el.classList.remove('hide');if(tx)tx.textContent=msg||'Saving…';}
+function fbDone(){var el=document.getElementById('fbLoader');if(el)el.classList.add('hide');}
+
+async function sv(){
+  if(!CU||isAdm)return;
+  fbLoading('Saving bills…');
+  try{
+    var db=window._db,col=window._fsCollection,dc=window._fsDoc,sd=window._fsSetDoc;
+    var colRef=col(db,'depts/'+CU+'/bills');
+    // delete removed records: get all existing ids in Firestore then delete missing ones
+    var snap=await window._fsGetDocs(colRef);
+    var ids=bills.map(function(b){return b.id;});
+    var dels=[];snap.forEach(function(d){if(!ids.includes(d.id))dels.push(window._fsDeleteDoc(dc(db,'depts/'+CU+'/bills/'+d.id)));});
+    await Promise.all(dels);
+    // upsert all current bills
+    await Promise.all(bills.map(function(b){return sd(dc(db,'depts/'+CU+'/bills/'+b.id),b);}));
+  }catch(e){console.error('sv error',e);toast('Save error: '+e.message,'err');}
+  fbDone();
+}
+
+async function svb(){
+  if(!CU||isAdm)return;
+  fbLoading('Saving budgets…');
+  try{
+    var db=window._db,col=window._fsCollection,dc=window._fsDoc,sd=window._fsSetDoc;
+    var colRef=col(db,'depts/'+CU+'/budgets');
+    var snap=await window._fsGetDocs(colRef);
+    var ids=budgets.map(function(b){return b.id;});
+    var dels=[];snap.forEach(function(d){if(!ids.includes(d.id))dels.push(window._fsDeleteDoc(dc(db,'depts/'+CU+'/budgets/'+d.id)));});
+    await Promise.all(dels);
+    await Promise.all(budgets.map(function(b){return sd(dc(db,'depts/'+CU+'/budgets/'+b.id),b);}));
+  }catch(e){console.error('svb error',e);toast('Save error: '+e.message,'err');}
+  fbDone();
+}
+
+// In-memory cache populated when admin logs in
+var _adminCache={};
+async function loadAllDeptBills(){
+  fbLoading('Loading all departments…');
+  _adminCache={};
+  try{
+    var db=window._db,col=window._fsCollection,gd=window._fsGetDocs;
+    await Promise.all(DO.map(async function(k){
+      var snap=await gd(col(db,'depts/'+k+'/bills'));
+      var arr=[];snap.forEach(function(d){arr.push(d.data());});
+      _adminCache[k]=arr;
+    }));
+  }catch(e){console.error('loadAllDeptBills error',e);}
+  fbDone();
+}
+
+function getAllBills(){
+  var all=[];
+  DO.forEach(function(k){
+    var arr=_adminCache[k]||[];
+    arr.forEach(function(b){all.push(Object.assign({},b,{_dk:k,_dl:DEPTS[k].label,_di:DEPTS[k].icon,_dc:DEPTS[k].color}));});
+  });
+  return all;
+}
 
 function updateAll(){var t=bills.reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);document.getElementById('sbTotal').textContent='₹'+fa(t);rKPIs();rMoChart();rDonut();rVBars();rRecent();popFilters();renderBills();}
 function rKPIs(){var total=bills.length,amt=bills.reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0),now=new Date(),mAmt=bills.filter(function(b){if(!b.submissionDate)return false;var d=new Date(b.submissionDate);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}).reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0),avg=total?amt/total:0,vc=new Set(bills.map(function(b){return b.vendorName;})).size;
@@ -565,24 +672,24 @@ function openBill(){editId=null;cFile=null;document.getElementById('bmTtl').text
 function openEdit(id){var b=bills.find(function(x){return x.id===id;});if(!b)return;editId=id;cFile=null;document.getElementById('bmTtl').textContent='Edit Vendor Bill';document.getElementById('f-sd').value=b.submissionDate||'';document.getElementById('f-id').value=b.invoiceDate||'';document.getElementById('f-ino').value=b.invoiceNo||'';document.getElementById('f-po').value=b.poNumber||'';document.getElementById('f-vn').value=b.vendorName||'';document.getElementById('f-pt').value=b.particulars||'';document.getElementById('f-am').value=b.amount||'';document.getElementById('f-fi').value='';var fp=document.getElementById('filePrev');if(b.fileName){fp.style.display='block';fp.textContent='📎 '+b.fileName;}else fp.style.display='none';document.getElementById('billModal').classList.add('open');}
 function closeBM2(){document.getElementById('billModal').classList.remove('open');}
 function onFile(input){var fp=document.getElementById('filePrev');if(input.files&&input.files[0]){var f=input.files[0];var r=new FileReader();r.onload=function(e){cFile={name:f.name,data:e.target.result};};r.readAsDataURL(f);fp.style.display='block';fp.textContent='📎 '+f.name;}else{cFile=null;fp.style.display='none';}}
-function saveBill(){var sd=document.getElementById('f-sd').value,ino=document.getElementById('f-ino').value.trim(),vn=document.getElementById('f-vn').value.trim(),am=document.getElementById('f-am').value;if(!sd||!ino||!vn||!am){toast('Fill in required fields','err');return;}var data={submissionDate:sd,invoiceDate:document.getElementById('f-id').value,invoiceNo:ino,poNumber:document.getElementById('f-po').value.trim(),vendorName:vn,particulars:document.getElementById('f-pt').value.trim(),amount:parseFloat(am)};if(cFile){data.fileName=cFile.name;data.fileData=cFile.data;}if(editId){var idx=bills.findIndex(function(b){return b.id===editId;});var ex=bills[idx];if(!cFile&&ex.fileData){data.fileName=ex.fileName;data.fileData=ex.fileData;}bills[idx]=Object.assign({},ex,data);toast('Bill updated ✓');}else{data.id='b'+Date.now();bills.push(data);toast('Bill added ✓');}sv();closeBM2();updateAll();}
+async function saveBill(){var sd=document.getElementById('f-sd').value,ino=document.getElementById('f-ino').value.trim(),vn=document.getElementById('f-vn').value.trim(),am=document.getElementById('f-am').value;if(!sd||!ino||!vn||!am){toast('Fill in required fields','err');return;}var data={submissionDate:sd,invoiceDate:document.getElementById('f-id').value,invoiceNo:ino,poNumber:document.getElementById('f-po').value.trim(),vendorName:vn,particulars:document.getElementById('f-pt').value.trim(),amount:parseFloat(am)};if(cFile){data.fileName=cFile.name;data.fileData=cFile.data;}if(editId){var idx=bills.findIndex(function(b){return b.id===editId;});var ex=bills[idx];if(!cFile&&ex.fileData){data.fileName=ex.fileName;data.fileData=ex.fileData;}bills[idx]=Object.assign({},ex,data);toast('Bill updated ✓');}else{data.id='b'+Date.now();bills.push(data);toast('Bill added ✓');}await sv();closeBM2();updateAll();}
 function askDel(id){delId=id;document.getElementById('delModal').classList.add('open');}
 function closeDelM(){document.getElementById('delModal').classList.remove('open');delId=null;}
-function confirmDel(){bills=bills.filter(function(b){return b.id!==delId;});sv();closeDelM();updateAll();toast('Bill deleted');}
+async function confirmDel(){bills=bills.filter(function(b){return b.id!==delId;});await sv();closeDelM();updateAll();toast('Bill deleted');}
 function openPdf(id){var b=bills.find(function(x){return x.id===id;});if(!b||!b.fileData)return;document.getElementById('pdfTtl').textContent=b.fileName||'Attachment';document.getElementById('pdfFr').src=b.fileData;document.getElementById('pdfDl').href=b.fileData;document.getElementById('pdfDl').download=b.fileName||'attachment';document.getElementById('pdfModal').classList.add('open');}
 function closePdf(){document.getElementById('pdfModal').classList.remove('open');document.getElementById('pdfFr').src='';}
 
 function openBM(id){if(id){eBId=id;var b=budgets.find(function(x){return x.id===id;});document.getElementById('budTtl').textContent='Edit Budget';document.getElementById('b-cat').value=b.category||'';document.getElementById('b-amt').value=b.amount||'';document.getElementById('b-yr').value=b.year||new Date().getFullYear();document.getElementById('b-mo').value=b.month||'';document.getElementById('b-mf').value=b.matchField||'vendorName';document.getElementById('b-mv').value=b.matchValue||'';}else{eBId=null;document.getElementById('budTtl').textContent='Set Budget';['b-cat','b-amt','b-mv'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('b-yr').value=new Date().getFullYear();document.getElementById('b-mo').value='';document.getElementById('b-mf').value='vendorName';}document.getElementById('budgetModal').classList.add('open');}
 function closeBM(){document.getElementById('budgetModal').classList.remove('open');}
-function saveBudget(){var cat=document.getElementById('b-cat').value.trim(),amt=document.getElementById('b-amt').value,yr=document.getElementById('b-yr').value,mv=document.getElementById('b-mv').value.trim();if(!cat||!amt||!yr||!mv){toast('Fill in required fields','err');return;}var data={category:cat,amount:parseFloat(amt),year:parseInt(yr),month:document.getElementById('b-mo').value,matchField:document.getElementById('b-mf').value,matchValue:mv};if(eBId){var idx=budgets.findIndex(function(b){return b.id===eBId;});budgets[idx]=Object.assign({},budgets[idx],data);toast('Budget updated ✓');}else{data.id='bg'+Date.now();budgets.push(data);toast('Budget saved ✓');}svb();closeBM();renderBudget();}
+async function saveBudget(){var cat=document.getElementById('b-cat').value.trim(),amt=document.getElementById('b-amt').value,yr=document.getElementById('b-yr').value,mv=document.getElementById('b-mv').value.trim();if(!cat||!amt||!yr||!mv){toast('Fill in required fields','err');return;}var data={category:cat,amount:parseFloat(amt),year:parseInt(yr),month:document.getElementById('b-mo').value,matchField:document.getElementById('b-mf').value,matchValue:mv};if(eBId){var idx=budgets.findIndex(function(b){return b.id===eBId;});budgets[idx]=Object.assign({},budgets[idx],data);toast('Budget updated ✓');}else{data.id='bg'+Date.now();budgets.push(data);toast('Budget saved ✓');}await svb();closeBM();renderBudget();}
 function askDelB(id){dBId=id;document.getElementById('delBudgetModal').classList.add('open');}
 function closeDelBM(){document.getElementById('delBudgetModal').classList.remove('open');dBId=null;}
-function confirmDelB(){budgets=budgets.filter(function(b){return b.id!==dBId;});svb();closeDelBM();renderBudget();toast('Deleted');}
+async function confirmDelB(){budgets=budgets.filter(function(b){return b.id!==dBId;});await svb();closeDelBM();renderBudget();toast('Deleted');}
 function getAct(b,yf,mf){return bills.filter(function(x){if(!x.submissionDate)return false;var d=new Date(x.submissionDate);var yr=d.getFullYear(),mo=String(d.getMonth()+1).padStart(2,'0');var byr=yf?parseInt(yf):b.year,bmo=mf||b.month||'';if(yr!==byr)return false;if(bmo&&mo!==bmo)return false;return(x[b.matchField]||'').toLowerCase().includes(b.matchValue.toLowerCase());}).reduce(function(s,x){return s+(parseFloat(x.amount)||0);},0);}
 function renderBudget(){var ysel=document.getElementById('byr'),cur=ysel.value;var yrs=new Set();budgets.forEach(function(b){if(b.year)yrs.add(b.year);});bills.forEach(function(b){if(b.submissionDate)yrs.add(new Date(b.submissionDate).getFullYear());});ysel.innerHTML='<option value="">All Years</option>'+Array.from(yrs).sort().reverse().map(function(y){return'<option value="'+y+'">'+y+'</option>';}).join('');ysel.value=cur;var yf=document.getElementById('byr').value,mf=document.getElementById('bmo').value;var fil=budgets.filter(function(b){return(!yf||String(b.year)===yf)&&(!mf||!b.month||b.month===mf);});document.getElementById('bCnt').textContent=fil.length+' budget'+(fil.length!==1?'s':'');var tb=0,ts=0;fil.forEach(function(b){tb+=b.amount;ts+=getAct(b,yf,mf);});var tr=tb-ts;document.getElementById('bva-tb').textContent='₹'+fa(tb);document.getElementById('bva-ts').textContent='₹'+fa(ts);document.getElementById('bva-tr').textContent=(tr<0?'-':'')+'₹'+fa(Math.abs(tr));document.getElementById('bva-trs').textContent=tr<0?'Over budget':'Under budget';var el=document.getElementById('bCards'),em=document.getElementById('bEmp');if(!fil.length){el.innerHTML='';em.style.display='block';return;}em.style.display='none';el.innerHTML=fil.map(function(b){var sp=getAct(b,yf,mf),rem=b.amount-sp,pct=b.amount>0?Math.min(sp/b.amount*100,100):0,rpct=b.amount>0?(sp/b.amount*100):0,st=rpct>=100?'ov':rpct>=80?'wn':'ok',per=b.month?(MN[parseInt(b.month)]+' '+b.year):('FY '+b.year);return'<div class="bvc"><div class="bvc-hd"><div><div class="bvc-cat">'+esc(b.category)+'</div><div class="bvc-meta">'+per+' &nbsp;·&nbsp; '+(b.matchField==='vendorName'?'Vendor':'Particulars')+' contains "'+esc(b.matchValue)+'"</div></div><div class="bvc-btns"><button class="ebt" onclick="openBM(\''+b.id+'\')">✎</button><button class="dbt" onclick="askDelB(\''+b.id+'\')">✕</button></div></div><div class="bvc-amts"><div class="bvc-cell"><div class="bvc-lbl">Budget</div><div class="bvc-val">₹'+fa(b.amount)+'</div></div><div class="bvc-cell"><div class="bvc-lbl">Spent</div><div class="bvc-val sp">₹'+fa(sp)+'</div></div><div class="bvc-cell"><div class="bvc-lbl">Remaining</div><div class="bvc-val '+(rem<0?'ng':'rm')+'">'+(rem<0?'-':'')+'₹'+fa(Math.abs(rem))+'</div></div></div><div class="bvc-btr"><div class="bvc-bf '+st+'" style="width:'+pct.toFixed(1)+'%"></div></div><div class="bvc-pct"><span>0%</span><span class="bvc-pv '+st+'">'+rpct.toFixed(1)+'% used</span><span>100%</span></div></div>';}).join('');}
 
-function renderAdmin(){var all=getAllBills(),now=new Date();var gt=all.reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);var ma=all.filter(function(b){if(!b.submissionDate)return false;var d=new Date(b.submissionDate);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}).reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);var actD=DO.filter(function(k){var s=localStorage.getItem(DEPTS[k].sk);try{var a=s?JSON.parse(s):[];return a.length>0;}catch(e){return false;}}).length;document.getElementById('adm-b').textContent=all.length;document.getElementById('adm-t').textContent='₹'+fa(gt);document.getElementById('adm-m').textContent='₹'+fa(ma);document.getElementById('adm-mlbl').textContent=now.toLocaleString('default',{month:'long',year:'numeric'});document.getElementById('adm-d').textContent=actD;document.getElementById('sbTotal').textContent='₹'+fa(gt);document.getElementById('admYr').textContent=now.getFullYear();var dt={};DO.forEach(function(k){dt[k]=0;});all.forEach(function(b){dt[b._dk]=(dt[b._dk]||0)+(parseFloat(b.amount)||0);});var maxD=Math.max.apply(null,Object.values(dt).concat([1]));
-  document.getElementById('admDCs').innerHTML=DO.map(function(k){var d=DEPTS[k];var s=localStorage.getItem(d.sk);var arr;try{arr=s?JSON.parse(s):[];}catch(e){arr=[];}var amt=dt[k]||0,pct=maxD>0?(amt/maxD*100).toFixed(1):0;return'<div class="dc" style="border-top-color:'+d.color+'"><div class="dc-ic">'+d.icon+'</div><div class="dc-nm">'+d.label+'</div><div class="dc-am">₹'+fa(amt)+'</div><div class="dc-ct">'+arr.length+' bill'+(arr.length!==1?'s':'')+'</div><div class="dc-bar"><div class="dc-bf" style="width:'+pct+'%;background:'+d.color+'"></div></div></div>';}).join('');
+function renderAdmin(){var all=getAllBills(),now=new Date();var gt=all.reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);var ma=all.filter(function(b){if(!b.submissionDate)return false;var d=new Date(b.submissionDate);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}).reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);var actD=DO.filter(function(k){return(_adminCache[k]||[]).length>0;}).length;document.getElementById('adm-b').textContent=all.length;document.getElementById('adm-t').textContent='₹'+fa(gt);document.getElementById('adm-m').textContent='₹'+fa(ma);document.getElementById('adm-mlbl').textContent=now.toLocaleString('default',{month:'long',year:'numeric'});document.getElementById('adm-d').textContent=actD;document.getElementById('sbTotal').textContent='₹'+fa(gt);document.getElementById('admYr').textContent=now.getFullYear();var dt={};DO.forEach(function(k){dt[k]=0;});all.forEach(function(b){dt[b._dk]=(dt[b._dk]||0)+(parseFloat(b.amount)||0);});var maxD=Math.max.apply(null,Object.values(dt).concat([1]));
+  document.getElementById('admDCs').innerHTML=DO.map(function(k){var d=DEPTS[k];var arr=_adminCache[k]||[];var amt=dt[k]||0,pct=maxD>0?(amt/maxD*100).toFixed(1):0;return'<div class="dc" style="border-top-color:'+d.color+'"><div class="dc-ic">'+d.icon+'</div><div class="dc-nm">'+d.label+'</div><div class="dc-am">₹'+fa(amt)+'</div><div class="dc-ct">'+arr.length+' bill'+(arr.length!==1?'s':'')+'</div><div class="dc-bar"><div class="dc-bf" style="width:'+pct+'%;background:'+d.color+'"></div></div></div>';}).join('');
   document.getElementById('admDBs').innerHTML=DO.map(function(k){var d=DEPTS[k],amt=dt[k]||0,pct=maxD>0?(amt/maxD*100).toFixed(1):0;return'<div class="dbi"><div class="dbl"><span class="db-ic">'+d.icon+'</span><span class="db-nm">'+d.label+'</span></div><div class="dbtr"><div class="dbf" style="width:'+pct+'%;background:'+d.color+'"></div></div><div class="dba">₹'+fas(amt)+'</div></div>';}).join('');
   var yr=now.getFullYear(),mo=[0,0,0,0,0,0,0,0,0,0,0,0];all.forEach(function(b){if(!b.submissionDate)return;var d=new Date(b.submissionDate);if(d.getFullYear()===yr)mo[d.getMonth()]+=parseFloat(b.amount)||0;});var maxM=Math.max.apply(null,mo.concat([1]));document.getElementById('admMC').innerHTML=mo.map(function(v,i){var c=i===now.getMonth();return'<div class="bg"><div class="bval">'+(v>0?'₹'+fas(v):'')+'</div><div class="bw"><div class="bar'+(c?' cur':'')+'" style="height:'+Math.max(v/maxM*100,2)+'%"></div></div><div class="blbl">'+MO[i]+'</div></div>';}).join('');
   var df=document.getElementById('admDF'),c=df.value;df.innerHTML='<option value="">All Departments</option>'+DO.map(function(k){var d=DEPTS[k];return'<option value="'+k+'">'+d.icon+' '+d.label+'</option>';}).join('');df.value=c;renderAdminTable();}
@@ -600,6 +707,12 @@ function fd(d){if(!d)return'—';var p=d.split('-');if(p.length!==3)return d;ret
 function esc(s){return(s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 var _tt=null;
 function toast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className=type||'';void t.offsetWidth;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(function(){t.classList.remove('show');},2600);}
+
+document.addEventListener('firebase-ready',function(){
+  fbDone();
+});
+// Fallback: if firebase-ready already fired before this script ran
+if(window._dbReady) fbDone();
 </script>
 </body>
 </html>
