@@ -5,42 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GITAM — Vendor Bills Register</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBvUz9ofE4QvuGMeMj4wVK8TOXzYKsJEdk",
-    authDomain: "bill-management-5c07d.firebaseapp.com",
-    projectId: "bill-management-5c07d",
-    storageBucket: "bill-management-5c07d.firebasestorage.app",
-    messagingSenderId: "868034603988",
-    appId: "1:868034603988:web:1a4bc1a8e00d81f94f8441",
-    measurementId: "G-ZMRQE4YWWY"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  window._db = db;
-  window._fsCollection = collection;
-  window._fsDoc = doc;
-  window._fsGetDocs = getDocs;
-  window._fsSetDoc = setDoc;
-  window._fsDeleteDoc = deleteDoc;
-  window._dbReady = true;
-  document.dispatchEvent(new Event('firebase-ready'));
+<!-- Firebase compat SDK (non-module, works synchronously with regular scripts) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script>
+  firebase.initializeApp({
+    apiKey:"AIzaSyBvUz9ofE4QvuGMeMj4wVK8TOXzYKsJEdk",
+    authDomain:"bill-management-5c07d.firebaseapp.com",
+    projectId:"bill-management-5c07d",
+    storageBucket:"bill-management-5c07d.firebasestorage.app",
+    messagingSenderId:"868034603988",
+    appId:"1:868034603988:web:1a4bc1a8e00d81f94f8441"
+  });
+  window._db = firebase.firestore();
+  window._storage = firebase.storage();
 </script>
-<style>
-#fbLoader{position:fixed;inset:0;background:rgba(0,43,43,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;}
-#fbLoader.hide{display:none;}
-.fbl-spinner{width:44px;height:44px;border:4px solid rgba(255,255,255,.15);border-top-color:#4ECDC4;border-radius:50%;animation:spin .75s linear infinite;margin-bottom:16px;}
-.fbl-txt{font-family:'Inter',sans-serif;font-size:14px;color:rgba(255,255,255,.7);font-weight:500;}
-@keyframes spin{to{transform:rotate(360deg);}}
-</style>
-<div id="fbLoader"><div class="fbl-spinner"></div><div class="fbl-txt" id="fblTxt">Connecting to database…</div></div>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
+#fbLoader{position:fixed;inset:0;background:rgba(0,43,43,.85);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:99999;}
+#fbLoader.show{display:flex;}
+.fbl-spinner{width:44px;height:44px;border:4px solid rgba(255,255,255,.15);border-top-color:#4ECDC4;border-radius:50%;animation:fblspin .75s linear infinite;margin-bottom:16px;}
+.fbl-txt{font-size:14px;color:rgba(255,255,255,.75);font-weight:500;}
+@keyframes fblspin{to{transform:rotate(360deg);}}
 html{font-size:14px;}
 body{font-family:'Inter',system-ui,sans-serif;background:#eef5f5;color:#1a2e2e;min-height:100vh;}
 
@@ -548,7 +536,6 @@ function ql(u,p){document.getElementById('luser').value=u;document.getElementByI
 async function doLogin(){
   var u=document.getElementById('luser').value.trim().toLowerCase(),p=document.getElementById('lpass').value.trim();
   document.getElementById('lerr').classList.remove('show');
-  if(!window._dbReady){toast('Database not ready yet, please wait','err');return;}
   if(u===ADMIN.un&&p===ADMIN.pw){
     CU='admin';isAdm=true;
     await loadAllDeptBills();
@@ -556,16 +543,21 @@ async function doLogin(){
   }
   if(DEPTS[u]&&DEPTS[u].pw===p){
     CU=u;isAdm=false;
-    fbLoading('Loading your bills…');
+    bills=[];budgets=[];
+    initDept();
+    // Load bills + budgets in background — app is instantly usable
+    fbLoading('Loading your data…');
     try{
-      var db=window._db,col=window._fsCollection,gd=window._fsGetDocs;
-      var bSnap=await gd(col(db,'depts/'+u+'/bills'));
-      bills=[];bSnap.forEach(function(d){bills.push(d.data());});
-      var bgSnap=await gd(col(db,'depts/'+u+'/budgets'));
-      budgets=[];bgSnap.forEach(function(d){budgets.push(d.data());});
+      var results=await Promise.all([
+        window._db.collection('depts/'+u+'/bills').get(),
+        window._db.collection('depts/'+u+'/budgets').get()
+      ]);
+      bills=[];results[0].forEach(function(d){bills.push(d.data());});
+      budgets=[];results[1].forEach(function(d){budgets.push(d.data());});
     }catch(e){bills=[];budgets=[];console.error('login load error',e);}
     fbDone();
-    initDept();return;
+    updateAll();
+    return;
   }
   document.getElementById('lerr').classList.add('show');
 }
@@ -596,51 +588,71 @@ function goPage(id,el){
   if(id==='budget')renderBudget();if(id==='admin')renderAdmin();
 }
 
-// ── Firebase helpers ──────────────────────────────────────────────
-function fbLoading(msg){var el=document.getElementById('fbLoader');var tx=document.getElementById('fblTxt');if(el)el.classList.remove('hide');if(tx)tx.textContent=msg||'Saving…';}
-function fbDone(){var el=document.getElementById('fbLoader');if(el)el.classList.add('hide');}
+// ── Firebase helpers (compat SDK) ────────────────────────────────
+function fbLoading(msg){
+  var el=document.getElementById('fbLoader');
+  var tx=document.getElementById('fblTxt');
+  if(el)el.classList.add('show');
+  if(tx)tx.textContent=msg||'Saving…';
+}
+function fbDone(){
+  var el=document.getElementById('fbLoader');
+  if(el)el.classList.remove('show');
+}
 
-async function sv(){
+// Save or delete a single bill — 1 Firestore write, attachment in Storage
+async function sv(billId, del){
   if(!CU||isAdm)return;
-  fbLoading('Saving bills…');
   try{
-    var db=window._db,col=window._fsCollection,dc=window._fsDoc,sd=window._fsSetDoc;
-    var colRef=col(db,'depts/'+CU+'/bills');
-    // delete removed records: get all existing ids in Firestore then delete missing ones
-    var snap=await window._fsGetDocs(colRef);
-    var ids=bills.map(function(b){return b.id;});
-    var dels=[];snap.forEach(function(d){if(!ids.includes(d.id))dels.push(window._fsDeleteDoc(dc(db,'depts/'+CU+'/bills/'+d.id)));});
-    await Promise.all(dels);
-    // upsert all current bills
-    await Promise.all(bills.map(function(b){return sd(dc(db,'depts/'+CU+'/bills/'+b.id),b);}));
+    var docRef=window._db.collection('depts/'+CU+'/bills').doc(billId);
+    if(del){
+      var existing=bills.find(function(b){return b.id===billId;});
+      if(existing&&existing.storagePath){
+        try{await window._storage.ref(existing.storagePath).delete();}catch(e){}
+      }
+      await docRef.delete();
+    }else{
+      var bill=bills.find(function(b){return b.id===billId;});
+      if(!bill)return;
+      if(bill.fileData&&bill.fileData.startsWith('data:')){
+        fbLoading('Uploading attachment…');
+        var storagePath='attachments/'+CU+'/'+billId;
+        var stRef=window._storage.ref(storagePath);
+        await stRef.putString(bill.fileData,'data_url');
+        var fileURL=await stRef.getDownloadURL();
+        bill.fileURL=fileURL;
+        bill.storagePath=storagePath;
+        delete bill.fileData;
+      }
+      var docData=Object.assign({},bill);
+      delete docData.fileData;
+      await docRef.set(docData);
+    }
   }catch(e){console.error('sv error',e);toast('Save error: '+e.message,'err');}
-  fbDone();
 }
 
-async function svb(){
+// Save or delete a single budget — 1 Firestore write
+async function svb(budgetId, del){
   if(!CU||isAdm)return;
-  fbLoading('Saving budgets…');
   try{
-    var db=window._db,col=window._fsCollection,dc=window._fsDoc,sd=window._fsSetDoc;
-    var colRef=col(db,'depts/'+CU+'/budgets');
-    var snap=await window._fsGetDocs(colRef);
-    var ids=budgets.map(function(b){return b.id;});
-    var dels=[];snap.forEach(function(d){if(!ids.includes(d.id))dels.push(window._fsDeleteDoc(dc(db,'depts/'+CU+'/budgets/'+d.id)));});
-    await Promise.all(dels);
-    await Promise.all(budgets.map(function(b){return sd(dc(db,'depts/'+CU+'/budgets/'+b.id),b);}));
+    var docRef=window._db.collection('depts/'+CU+'/budgets').doc(budgetId);
+    if(del){
+      await docRef.delete();
+    }else{
+      var budget=budgets.find(function(b){return b.id===budgetId;});
+      if(budget) await docRef.set(budget);
+    }
   }catch(e){console.error('svb error',e);toast('Save error: '+e.message,'err');}
-  fbDone();
 }
 
-// In-memory cache populated when admin logs in
+// Admin: load all dept bills in parallel
 var _adminCache={};
 async function loadAllDeptBills(){
   fbLoading('Loading all departments…');
   _adminCache={};
   try{
-    var db=window._db,col=window._fsCollection,gd=window._fsGetDocs;
     await Promise.all(DO.map(async function(k){
-      var snap=await gd(col(db,'depts/'+k+'/bills'));
+      var snap=await window._db.collection('depts/'+k+'/bills').get();
       var arr=[];snap.forEach(function(d){arr.push(d.data());});
       _adminCache[k]=arr;
     }));
@@ -666,25 +678,25 @@ function rVBars(){var bV={};bills.forEach(function(b){if(b.vendorName)bV[b.vendo
 function rRecent(){var r=bills.slice().sort(function(a,b){return(b.submissionDate||'').localeCompare(a.submissionDate||'');}).slice(0,6);var tb=document.getElementById('recTbl'),em=document.getElementById('recEmp');if(!r.length){tb.innerHTML='';em.style.display='block';return;}em.style.display='none';tb.innerHTML=r.map(function(b){return'<tr><td>'+fd(b.submissionDate)+'</td><td style="color:#2980B9;font-weight:700">'+esc(b.invoiceNo)+'</td><td style="font-weight:600;max-width:140px;overflow:hidden;text-overflow:ellipsis">'+esc(b.vendorName)+'</td><td style="color:#5A7070;max-width:150px;overflow:hidden;text-overflow:ellipsis">'+esc(b.particulars)+'</td><td style="font-weight:800;color:#004F4F">₹'+fa(parseFloat(b.amount||0))+'</td></tr>';}).join('');}
 function popFilters(){var ms=document.getElementById('mFil'),vs=document.getElementById('vFil'),mc=ms.value,vc=vs.value;var months=new Set(),vendors=new Set();bills.forEach(function(b){if(b.submissionDate){var d=new Date(b.submissionDate);months.add(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));}if(b.vendorName)vendors.add(b.vendorName);});ms.innerHTML='<option value="">All Months</option>'+Array.from(months).sort().reverse().map(function(m){var pt=m.split('-'),lb=new Date(pt[0],pt[1]-1).toLocaleString('default',{month:'long',year:'numeric'});return'<option value="'+m+'">'+lb+'</option>';}).join('');ms.value=mc;vs.innerHTML='<option value="">All Vendors</option>'+Array.from(vendors).sort().map(function(v){return'<option value="'+esc(v)+'">'+esc(v)+'</option>';}).join('');vs.value=vc;}
 function srt(f){if(sF===f)sD*=-1;else{sF=f;sD=1;}document.querySelectorAll('.btbl thead th[id^="th-"]').forEach(function(th){var id=th.id.replace('th-','').replace('-','');var fmap={sd:'submissionDate',ino:'invoiceNo',id:'invoiceDate',po:'poNumber',vn:'vendorName',pt:'particulars',am:'amount'};th.textContent=th.textContent.replace(/[↑↓↕]/g,'').trim()+' '+(fmap[id]===f?(sD===1?'↑':'↓'):'↕');th.classList.toggle('sorted',fmap[id]===f);});renderBills();}
-function renderBills(){var q=(document.getElementById('srch').value||'').toLowerCase(),mf=document.getElementById('mFil').value,vf=document.getElementById('vFil').value;var f=bills.filter(function(b){var mq=!q||[b.vendorName,b.invoiceNo,b.particulars,b.poNumber].some(function(x){return(x||'').toLowerCase().includes(q);});return mq&&(!mf||(b.submissionDate||'').startsWith(mf))&&(!vf||b.vendorName===vf);});f.sort(function(a,b){var va=a[sF]||'',vb=b[sF]||'';if(sF==='amount'){va=parseFloat(va)||0;vb=parseFloat(vb)||0;}return va<vb?-sD:va>vb?sD:0;});document.getElementById('rCnt').textContent=f.length+' record'+(f.length!==1?'s':'');var tb=document.getElementById('billsBody'),em=document.getElementById('billsEmp'),tw=document.getElementById('tblWrap');if(!f.length){tb.innerHTML='';em.style.display='block';tw.style.display='none';return;}em.style.display='none';tw.style.display='block';tb.innerHTML=f.map(function(b){var at=b.fileData?'<span class="ach" onclick="openPdf(\''+b.id+'\')">📎 '+esc(b.fileName||'View')+'</span>':'<span class="noat">—</span>';return'<tr><td>'+fd(b.submissionDate)+'</td><td class="td-inv">'+esc(b.invoiceNo)+'</td><td>'+fd(b.invoiceDate)+'</td><td class="td-po">'+esc(b.poNumber||'—')+'</td><td class="td-v" title="'+esc(b.vendorName)+'">'+esc(b.vendorName)+'</td><td class="td-p" title="'+esc(b.particulars)+'">'+esc(b.particulars||'—')+'</td><td class="td-amt">₹'+fa(parseFloat(b.amount||0))+'</td><td>'+at+'</td><td><div class="abts"><button class="ebt" onclick="openEdit(\''+b.id+'\')">✎ Edit</button><button class="dbt" onclick="askDel(\''+b.id+'\')">✕</button></div></td></tr>';}).join('');}
+function renderBills(){var q=(document.getElementById('srch').value||'').toLowerCase(),mf=document.getElementById('mFil').value,vf=document.getElementById('vFil').value;var f=bills.filter(function(b){var mq=!q||[b.vendorName,b.invoiceNo,b.particulars,b.poNumber].some(function(x){return(x||'').toLowerCase().includes(q);});return mq&&(!mf||(b.submissionDate||'').startsWith(mf))&&(!vf||b.vendorName===vf);});f.sort(function(a,b){var va=a[sF]||'',vb=b[sF]||'';if(sF==='amount'){va=parseFloat(va)||0;vb=parseFloat(vb)||0;}return va<vb?-sD:va>vb?sD:0;});document.getElementById('rCnt').textContent=f.length+' record'+(f.length!==1?'s':'');var tb=document.getElementById('billsBody'),em=document.getElementById('billsEmp'),tw=document.getElementById('tblWrap');if(!f.length){tb.innerHTML='';em.style.display='block';tw.style.display='none';return;}em.style.display='none';tw.style.display='block';tb.innerHTML=f.map(function(b){var at=(b.fileURL||b.fileData)?'<span class="ach" onclick="openPdf(\''+b.id+'\')">📎 '+esc(b.fileName||'View')+'</span>':'<span class="noat">—</span>';return'<tr><td>'+fd(b.submissionDate)+'</td><td class="td-inv">'+esc(b.invoiceNo)+'</td><td>'+fd(b.invoiceDate)+'</td><td class="td-po">'+esc(b.poNumber||'—')+'</td><td class="td-v" title="'+esc(b.vendorName)+'">'+esc(b.vendorName)+'</td><td class="td-p" title="'+esc(b.particulars)+'">'+esc(b.particulars||'—')+'</td><td class="td-amt">₹'+fa(parseFloat(b.amount||0))+'</td><td>'+at+'</td><td><div class="abts"><button class="ebt" onclick="openEdit(\''+b.id+'\')">✎ Edit</button><button class="dbt" onclick="askDel(\''+b.id+'\')">✕</button></div></td></tr>';}).join('');}
 
 function openBill(){editId=null;cFile=null;document.getElementById('bmTtl').textContent='Add Vendor Bill';['f-sd','f-id','f-ino','f-po','f-vn','f-pt','f-am'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('f-fi').value='';document.getElementById('filePrev').style.display='none';document.getElementById('billModal').classList.add('open');}
 function openEdit(id){var b=bills.find(function(x){return x.id===id;});if(!b)return;editId=id;cFile=null;document.getElementById('bmTtl').textContent='Edit Vendor Bill';document.getElementById('f-sd').value=b.submissionDate||'';document.getElementById('f-id').value=b.invoiceDate||'';document.getElementById('f-ino').value=b.invoiceNo||'';document.getElementById('f-po').value=b.poNumber||'';document.getElementById('f-vn').value=b.vendorName||'';document.getElementById('f-pt').value=b.particulars||'';document.getElementById('f-am').value=b.amount||'';document.getElementById('f-fi').value='';var fp=document.getElementById('filePrev');if(b.fileName){fp.style.display='block';fp.textContent='📎 '+b.fileName;}else fp.style.display='none';document.getElementById('billModal').classList.add('open');}
 function closeBM2(){document.getElementById('billModal').classList.remove('open');}
 function onFile(input){var fp=document.getElementById('filePrev');if(input.files&&input.files[0]){var f=input.files[0];var r=new FileReader();r.onload=function(e){cFile={name:f.name,data:e.target.result};};r.readAsDataURL(f);fp.style.display='block';fp.textContent='📎 '+f.name;}else{cFile=null;fp.style.display='none';}}
-async function saveBill(){var sd=document.getElementById('f-sd').value,ino=document.getElementById('f-ino').value.trim(),vn=document.getElementById('f-vn').value.trim(),am=document.getElementById('f-am').value;if(!sd||!ino||!vn||!am){toast('Fill in required fields','err');return;}var data={submissionDate:sd,invoiceDate:document.getElementById('f-id').value,invoiceNo:ino,poNumber:document.getElementById('f-po').value.trim(),vendorName:vn,particulars:document.getElementById('f-pt').value.trim(),amount:parseFloat(am)};if(cFile){data.fileName=cFile.name;data.fileData=cFile.data;}if(editId){var idx=bills.findIndex(function(b){return b.id===editId;});var ex=bills[idx];if(!cFile&&ex.fileData){data.fileName=ex.fileName;data.fileData=ex.fileData;}bills[idx]=Object.assign({},ex,data);toast('Bill updated ✓');}else{data.id='b'+Date.now();bills.push(data);toast('Bill added ✓');}await sv();closeBM2();updateAll();}
+async function saveBill(){var sd=document.getElementById('f-sd').value,ino=document.getElementById('f-ino').value.trim(),vn=document.getElementById('f-vn').value.trim(),am=document.getElementById('f-am').value;if(!sd||!ino||!vn||!am){toast('Fill in required fields','err');return;}var data={submissionDate:sd,invoiceDate:document.getElementById('f-id').value,invoiceNo:ino,poNumber:document.getElementById('f-po').value.trim(),vendorName:vn,particulars:document.getElementById('f-pt').value.trim(),amount:parseFloat(am)};if(cFile){data.fileName=cFile.name;data.fileData=cFile.data;}if(editId){var idx=bills.findIndex(function(b){return b.id===editId;});var ex=bills[idx];if(!cFile){if(ex.fileData){data.fileName=ex.fileName;data.fileData=ex.fileData;}if(ex.fileURL){data.fileName=data.fileName||ex.fileName;data.fileURL=ex.fileURL;data.storagePath=ex.storagePath;}}bills[idx]=Object.assign({},ex,data);toast('Bill updated ✓');await sv(editId);}else{data.id='b'+Date.now();bills.push(data);toast('Bill added ✓');await sv(data.id);}closeBM2();updateAll();}
 function askDel(id){delId=id;document.getElementById('delModal').classList.add('open');}
 function closeDelM(){document.getElementById('delModal').classList.remove('open');delId=null;}
-async function confirmDel(){bills=bills.filter(function(b){return b.id!==delId;});await sv();closeDelM();updateAll();toast('Bill deleted');}
-function openPdf(id){var b=bills.find(function(x){return x.id===id;});if(!b||!b.fileData)return;document.getElementById('pdfTtl').textContent=b.fileName||'Attachment';document.getElementById('pdfFr').src=b.fileData;document.getElementById('pdfDl').href=b.fileData;document.getElementById('pdfDl').download=b.fileName||'attachment';document.getElementById('pdfModal').classList.add('open');}
+async function confirmDel(){var id=delId;bills=bills.filter(function(b){return b.id!==id;});await sv(id,true);closeDelM();updateAll();toast('Bill deleted');}
+function openPdf(id){var b=bills.find(function(x){return x.id===id;});if(!b)return;var url=b.fileURL||b.fileData;if(!url)return;document.getElementById('pdfTtl').textContent=b.fileName||'Attachment';document.getElementById('pdfFr').src=url;document.getElementById('pdfDl').href=url;document.getElementById('pdfDl').download=b.fileName||'attachment';document.getElementById('pdfModal').classList.add('open');}
 function closePdf(){document.getElementById('pdfModal').classList.remove('open');document.getElementById('pdfFr').src='';}
 
 function openBM(id){if(id){eBId=id;var b=budgets.find(function(x){return x.id===id;});document.getElementById('budTtl').textContent='Edit Budget';document.getElementById('b-cat').value=b.category||'';document.getElementById('b-amt').value=b.amount||'';document.getElementById('b-yr').value=b.year||new Date().getFullYear();document.getElementById('b-mo').value=b.month||'';document.getElementById('b-mf').value=b.matchField||'vendorName';document.getElementById('b-mv').value=b.matchValue||'';}else{eBId=null;document.getElementById('budTtl').textContent='Set Budget';['b-cat','b-amt','b-mv'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('b-yr').value=new Date().getFullYear();document.getElementById('b-mo').value='';document.getElementById('b-mf').value='vendorName';}document.getElementById('budgetModal').classList.add('open');}
 function closeBM(){document.getElementById('budgetModal').classList.remove('open');}
-async function saveBudget(){var cat=document.getElementById('b-cat').value.trim(),amt=document.getElementById('b-amt').value,yr=document.getElementById('b-yr').value,mv=document.getElementById('b-mv').value.trim();if(!cat||!amt||!yr||!mv){toast('Fill in required fields','err');return;}var data={category:cat,amount:parseFloat(amt),year:parseInt(yr),month:document.getElementById('b-mo').value,matchField:document.getElementById('b-mf').value,matchValue:mv};if(eBId){var idx=budgets.findIndex(function(b){return b.id===eBId;});budgets[idx]=Object.assign({},budgets[idx],data);toast('Budget updated ✓');}else{data.id='bg'+Date.now();budgets.push(data);toast('Budget saved ✓');}await svb();closeBM();renderBudget();}
+async function saveBudget(){var cat=document.getElementById('b-cat').value.trim(),amt=document.getElementById('b-amt').value,yr=document.getElementById('b-yr').value,mv=document.getElementById('b-mv').value.trim();if(!cat||!amt||!yr||!mv){toast('Fill in required fields','err');return;}var data={category:cat,amount:parseFloat(amt),year:parseInt(yr),month:document.getElementById('b-mo').value,matchField:document.getElementById('b-mf').value,matchValue:mv};if(eBId){var idx=budgets.findIndex(function(b){return b.id===eBId;});budgets[idx]=Object.assign({},budgets[idx],data);toast('Budget updated ✓');await svb(eBId);}else{data.id='bg'+Date.now();budgets.push(data);toast('Budget saved ✓');await svb(data.id);}closeBM();renderBudget();}
 function askDelB(id){dBId=id;document.getElementById('delBudgetModal').classList.add('open');}
 function closeDelBM(){document.getElementById('delBudgetModal').classList.remove('open');dBId=null;}
-async function confirmDelB(){budgets=budgets.filter(function(b){return b.id!==dBId;});await svb();closeDelBM();renderBudget();toast('Deleted');}
+async function confirmDelB(){var id=dBId;budgets=budgets.filter(function(b){return b.id!==id;});await svb(id,true);closeDelBM();renderBudget();toast('Deleted');}
 function getAct(b,yf,mf){return bills.filter(function(x){if(!x.submissionDate)return false;var d=new Date(x.submissionDate);var yr=d.getFullYear(),mo=String(d.getMonth()+1).padStart(2,'0');var byr=yf?parseInt(yf):b.year,bmo=mf||b.month||'';if(yr!==byr)return false;if(bmo&&mo!==bmo)return false;return(x[b.matchField]||'').toLowerCase().includes(b.matchValue.toLowerCase());}).reduce(function(s,x){return s+(parseFloat(x.amount)||0);},0);}
 function renderBudget(){var ysel=document.getElementById('byr'),cur=ysel.value;var yrs=new Set();budgets.forEach(function(b){if(b.year)yrs.add(b.year);});bills.forEach(function(b){if(b.submissionDate)yrs.add(new Date(b.submissionDate).getFullYear());});ysel.innerHTML='<option value="">All Years</option>'+Array.from(yrs).sort().reverse().map(function(y){return'<option value="'+y+'">'+y+'</option>';}).join('');ysel.value=cur;var yf=document.getElementById('byr').value,mf=document.getElementById('bmo').value;var fil=budgets.filter(function(b){return(!yf||String(b.year)===yf)&&(!mf||!b.month||b.month===mf);});document.getElementById('bCnt').textContent=fil.length+' budget'+(fil.length!==1?'s':'');var tb=0,ts=0;fil.forEach(function(b){tb+=b.amount;ts+=getAct(b,yf,mf);});var tr=tb-ts;document.getElementById('bva-tb').textContent='₹'+fa(tb);document.getElementById('bva-ts').textContent='₹'+fa(ts);document.getElementById('bva-tr').textContent=(tr<0?'-':'')+'₹'+fa(Math.abs(tr));document.getElementById('bva-trs').textContent=tr<0?'Over budget':'Under budget';var el=document.getElementById('bCards'),em=document.getElementById('bEmp');if(!fil.length){el.innerHTML='';em.style.display='block';return;}em.style.display='none';el.innerHTML=fil.map(function(b){var sp=getAct(b,yf,mf),rem=b.amount-sp,pct=b.amount>0?Math.min(sp/b.amount*100,100):0,rpct=b.amount>0?(sp/b.amount*100):0,st=rpct>=100?'ov':rpct>=80?'wn':'ok',per=b.month?(MN[parseInt(b.month)]+' '+b.year):('FY '+b.year);return'<div class="bvc"><div class="bvc-hd"><div><div class="bvc-cat">'+esc(b.category)+'</div><div class="bvc-meta">'+per+' &nbsp;·&nbsp; '+(b.matchField==='vendorName'?'Vendor':'Particulars')+' contains "'+esc(b.matchValue)+'"</div></div><div class="bvc-btns"><button class="ebt" onclick="openBM(\''+b.id+'\')">✎</button><button class="dbt" onclick="askDelB(\''+b.id+'\')">✕</button></div></div><div class="bvc-amts"><div class="bvc-cell"><div class="bvc-lbl">Budget</div><div class="bvc-val">₹'+fa(b.amount)+'</div></div><div class="bvc-cell"><div class="bvc-lbl">Spent</div><div class="bvc-val sp">₹'+fa(sp)+'</div></div><div class="bvc-cell"><div class="bvc-lbl">Remaining</div><div class="bvc-val '+(rem<0?'ng':'rm')+'">'+(rem<0?'-':'')+'₹'+fa(Math.abs(rem))+'</div></div></div><div class="bvc-btr"><div class="bvc-bf '+st+'" style="width:'+pct.toFixed(1)+'%"></div></div><div class="bvc-pct"><span>0%</span><span class="bvc-pv '+st+'">'+rpct.toFixed(1)+'% used</span><span>100%</span></div></div>';}).join('');}
 
@@ -708,11 +720,8 @@ function esc(s){return(s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt
 var _tt=null;
 function toast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className=type||'';void t.offsetWidth;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(function(){t.classList.remove('show');},2600);}
 
-document.addEventListener('firebase-ready',function(){
-  fbDone();
-});
-// Fallback: if firebase-ready already fired before this script ran
-if(window._dbReady) fbDone();
+
 </script>
+<div id="fbLoader"><div class="fbl-spinner"></div><div class="fbl-txt" id="fblTxt">Loading…</div></div>
 </body>
 </html>
