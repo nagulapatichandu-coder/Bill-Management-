@@ -337,6 +337,11 @@ body{font-family:'Inter',system-ui,sans-serif;background:#eef5f5;color:#1a2e2e;m
 .cred-reset-btn{width:100%;margin-top:4px;background:linear-gradient(135deg,#b88c30,#D4A843);color:#fff;border:none;border-radius:9px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .18s;}
 .cred-reset-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(212,168,67,.36);}
 ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#c8e0e0;border-radius:3px;}
+/* Password info icon */
+.pw-info-icon{position:relative;display:inline-flex;align-items:center;cursor:pointer;color:#5A7070;font-style:normal;font-size:13px;font-weight:400;letter-spacing:0;text-transform:none;}
+.pw-info-icon .pw-tooltip{display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 7px);background:#1a2e2e;color:#fff;border-radius:10px;padding:10px 14px;font-size:11.5px;line-height:1.7;white-space:nowrap;z-index:9999;box-shadow:0 6px 20px rgba(0,0,0,.28);pointer-events:none;}
+.pw-info-icon .pw-tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#1a2e2e;}
+.pw-info-icon:hover .pw-tooltip,.pw-info-icon:focus .pw-tooltip{display:block;}
 </style>
 </head>
 <body>
@@ -355,7 +360,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#eef5f5;color:#1a2e2e;m
       <div class="lr-sub">Or enter your credentials manually below</div>
       <div class="lerr" id="lerr">Incorrect username or password.</div>
       <div class="lfg"><label>Username</label><input type="text" id="luser" placeholder="hk / rm / fb / tr / res / hr / admin" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
-      <div class="lfg"><label>Password</label><input type="password" id="lpass" placeholder="1111 / 2222 / 3333 …" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="lfg"><label style="display:flex;align-items:center;gap:5px;">Password <span class="pw-info-icon" tabindex="0" title="Default passwords: hk→1111 · rm→2222 · fb→3333 · tr→4444 · res→5555 · hr→6666 · admin→0000">ⓘ<div class="pw-tooltip">Default passwords:<br>Housekeeping → 1111<br>Repair &amp; Maint. → 2222<br>F&amp;B Service → 3333<br>Transport → 4444<br>Residence → 5555<br>HR → 6666<br>Admin → 0000</div></span></label><input type="password" id="lpass" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <button class="lbtn" onclick="doLogin()">Sign In →</button>
       <div class="l-hint">💡 Click any department on the left to sign in instantly</div>
     </div>
@@ -660,16 +665,51 @@ async function sv(billId, del){
       if(!bill)return;
       if(bill.fileData&&bill.fileData.startsWith('data:')){
         fbLoading('Uploading attachment…');
-        var storagePath='attachments/'+CU+'/'+billId;
-        var stRef=window._storage.ref(storagePath);
-        await stRef.putString(bill.fileData,'data_url');
-        var fileURL=await stRef.getDownloadURL();
-        bill.fileURL=fileURL;
-        bill.storagePath=storagePath;
-        delete bill.fileData;
+        var uploadedViaStorage=false;
+        try{
+          // Try Firebase Storage with a 20s timeout watchdog
+          var storagePath='attachments/'+CU+'/'+billId;
+          var stRef=window._storage.ref(storagePath);
+          var dataUrl=bill.fileData;
+          var arr2=dataUrl.split(','),mime2=arr2[0].match(/:(.*?);/)[1];
+          var bstr2=atob(arr2[1]),n2=bstr2.length,u8b=new Uint8Array(n2);
+          while(n2--){u8b[n2]=bstr2.charCodeAt(n2);}
+          var blob2=new Blob([u8b],{type:mime2});
+          var uploadTask=stRef.put(blob2,{contentType:mime2});
+          await new Promise(function(resolve,reject){
+            var watchdog=setTimeout(function(){uploadTask.cancel();reject(new Error('timeout'));},20000);
+            uploadTask.on('state_changed',
+              function(snap){
+                if(snap.totalBytes>0){
+                  var pct=Math.round(snap.bytesTransferred/snap.totalBytes*100);
+                  fbLoading('Uploading… '+pct+'%');
+                  clearTimeout(watchdog);
+                  watchdog=setTimeout(function(){uploadTask.cancel();reject(new Error('timeout'));},20000);
+                }
+              },
+              function(err){clearTimeout(watchdog);reject(err);},
+              function(){clearTimeout(watchdog);resolve();}
+            );
+          });
+          var fileURL=await stRef.getDownloadURL();
+          bill.fileURL=fileURL;
+          bill.storagePath=storagePath;
+          delete bill.fileData;
+          uploadedViaStorage=true;
+        }catch(storageErr){
+          // Storage failed/timed out — store base64 directly in Firestore (works without Storage)
+          console.warn('Storage upload failed, using Firestore fallback:',storageErr.message);
+          fbLoading('Saving attachment…');
+          uploadedViaStorage=false;
+          // fileData stays on bill — saved directly into Firestore doc
+        }
       }
       var docData=Object.assign({},bill);
-      delete docData.fileData;
+      // If file is small enough for Firestore (<900KB base64), keep it; else strip it
+      if(docData.fileData&&docData.fileData.length>900000){
+        delete docData.fileData;
+        toast('File too large for direct save. Use a smaller file or fix Storage rules.','err');
+      }
       await docRef.set(docData);
     }
   }catch(e){console.error('sv error',e);toast('Save error: '+e.message,'err');}
@@ -728,8 +768,9 @@ function renderBills(){var q=(document.getElementById('srch').value||'').toLower
 function openBill(){editId=null;cFile=null;document.getElementById('bmTtl').textContent='Add Vendor Bill';['f-sd','f-id','f-ino','f-po','f-vn','f-pt','f-am'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('f-fi').value='';document.getElementById('filePrev').style.display='none';document.getElementById('billModal').classList.add('open');}
 function openEdit(id){var b=bills.find(function(x){return x.id===id;});if(!b)return;editId=id;cFile=null;document.getElementById('bmTtl').textContent='Edit Vendor Bill';document.getElementById('f-sd').value=b.submissionDate||'';document.getElementById('f-id').value=b.invoiceDate||'';document.getElementById('f-ino').value=b.invoiceNo||'';document.getElementById('f-po').value=b.poNumber||'';document.getElementById('f-vn').value=b.vendorName||'';document.getElementById('f-pt').value=b.particulars||'';document.getElementById('f-am').value=b.amount||'';document.getElementById('f-fi').value='';var fp=document.getElementById('filePrev');if(b.fileName){fp.style.display='block';fp.textContent='📎 '+b.fileName;}else fp.style.display='none';document.getElementById('billModal').classList.add('open');}
 function closeBM2(){document.getElementById('billModal').classList.remove('open');}
-function onFile(input){var fp=document.getElementById('filePrev');if(input.files&&input.files[0]){var f=input.files[0];var r=new FileReader();r.onload=function(e){cFile={name:f.name,data:e.target.result};};r.readAsDataURL(f);fp.style.display='block';fp.textContent='📎 '+f.name;}else{cFile=null;fp.style.display='none';}}
-async function saveBill(){var sd=document.getElementById('f-sd').value,ino=document.getElementById('f-ino').value.trim(),vn=document.getElementById('f-vn').value.trim(),am=document.getElementById('f-am').value;if(!sd||!ino||!vn||!am){toast('Fill in required fields','err');return;}var data={submissionDate:sd,invoiceDate:document.getElementById('f-id').value,invoiceNo:ino,poNumber:document.getElementById('f-po').value.trim(),vendorName:vn,particulars:document.getElementById('f-pt').value.trim(),amount:parseFloat(am)};if(cFile){data.fileName=cFile.name;data.fileData=cFile.data;}if(editId){var idx=bills.findIndex(function(b){return b.id===editId;});var ex=bills[idx];if(!cFile){if(ex.fileData){data.fileName=ex.fileName;data.fileData=ex.fileData;}if(ex.fileURL){data.fileName=data.fileName||ex.fileName;data.fileURL=ex.fileURL;data.storagePath=ex.storagePath;}}bills[idx]=Object.assign({},ex,data);toast('Bill updated ✓');closeBM2();updateAll();await sv(editId);updateAll();}else{data.id='b'+Date.now();bills.push(data);toast('Bill added ✓');closeBM2();updateAll();await sv(data.id);updateAll();}}
+var _fileReady=Promise.resolve();
+function onFile(input){var fp=document.getElementById('filePrev');if(input.files&&input.files[0]){var f=input.files[0];fp.style.display='block';fp.textContent='⏳ Reading '+f.name+'…';_fileReady=new Promise(function(res,rej){var r=new FileReader();r.onload=function(e){cFile={name:f.name,data:e.target.result};fp.textContent='📎 '+f.name;res();};r.onerror=function(){cFile=null;fp.style.display='none';rej(new Error('File read failed'));};r.readAsDataURL(f);});}else{cFile=null;fp.style.display='none';_fileReady=Promise.resolve();}}
+async function saveBill(){var sd=document.getElementById('f-sd').value,ino=document.getElementById('f-ino').value.trim(),vn=document.getElementById('f-vn').value.trim(),am=document.getElementById('f-am').value;if(!sd||!ino||!vn||!am){toast('Fill in required fields','err');return;}try{await _fileReady;}catch(e){toast('File could not be read. Try again.','err');return;}var data={submissionDate:sd,invoiceDate:document.getElementById('f-id').value,invoiceNo:ino,poNumber:document.getElementById('f-po').value.trim(),vendorName:vn,particulars:document.getElementById('f-pt').value.trim(),amount:parseFloat(am)};if(cFile){data.fileName=cFile.name;data.fileData=cFile.data;}if(editId){var idx=bills.findIndex(function(b){return b.id===editId;});var ex=bills[idx];if(!cFile){if(ex.fileData){data.fileName=ex.fileName;data.fileData=ex.fileData;}if(ex.fileURL){data.fileName=data.fileName||ex.fileName;data.fileURL=ex.fileURL;data.storagePath=ex.storagePath;}}bills[idx]=Object.assign({},ex,data);toast('Bill updated ✓');closeBM2();updateAll();await sv(editId);updateAll();}else{data.id='b'+Date.now();bills.push(data);toast('Bill added ✓');closeBM2();updateAll();await sv(data.id);updateAll();}}
 function askDel(id){delId=id;document.getElementById('delModal').classList.add('open');}
 function closeDelM(){document.getElementById('delModal').classList.remove('open');delId=null;}
 async function confirmDel(){var id=delId;bills=bills.filter(function(b){return b.id!==id;});await sv(id,true);closeDelM();updateAll();toast('Bill deleted');}
@@ -788,7 +829,9 @@ function closeCredModal(){document.getElementById('credModal').classList.remove(
 
 function renderCredentials(){
   var el=document.getElementById('credGrid');if(!el)return;
-  el.innerHTML=DO.map(function(k){var d=DEPTS[k];return'<div class="cred-card"><div class="cred-card-hd"><div class="cred-card-ic" style="background:'+d.color+'18;border:1.5px solid '+d.color+'33;">'+d.icon+'</div><div class="cred-card-lbl">'+esc(d.label)+'</div></div><div class="cred-field"><div class="cred-field-lbl">Username</div><div class="cred-field-val"><span class="cred-field-txt" id="cu-'+k+'">'+esc(d.un)+'</span></div></div><div class="cred-field"><div class="cred-field-lbl">Password</div><div class="cred-field-val"><span class="cred-field-txt" id="cp-'+k+'">••••••</span><button class="cred-eye" onclick="togglePw(\''+k+'\',\''+esc(d.pw)+'\')" id="ceye-'+k+'" title="Show / hide">👁</button></div></div><button class="cred-reset-btn" onclick="openResetCred(\''+k+'\')">✏️ Reset Credentials</button></div>';}).join('');
+  var deptCards=DO.map(function(k){var d=DEPTS[k];return'<div class="cred-card"><div class="cred-card-hd"><div class="cred-card-ic" style="background:'+d.color+'18;border:1.5px solid '+d.color+'33;">'+d.icon+'</div><div class="cred-card-lbl">'+esc(d.label)+'</div></div><div class="cred-field"><div class="cred-field-lbl">Username</div><div class="cred-field-val"><span class="cred-field-txt" id="cu-'+k+'">'+esc(d.un)+'</span></div></div><div class="cred-field"><div class="cred-field-lbl">Password</div><div class="cred-field-val"><span class="cred-field-txt" id="cp-'+k+'">••••••</span><button class="cred-eye" onclick="togglePw(\''+k+'\',\''+esc(d.pw)+'\')" id="ceye-'+k+'" title="Show / hide">👁</button></div></div><button class="cred-reset-btn" onclick="openResetCred(\''+k+'\')">✏️ Reset Credentials</button></div>';}).join('');
+  var adminCard='<div class="cred-card" style="border:1.5px solid rgba(212,168,67,.4);"><div class="cred-card-hd"><div class="cred-card-ic" style="background:rgba(212,168,67,.15);border:1.5px solid rgba(212,168,67,.35);">👑</div><div class="cred-card-lbl">Admin — Master</div></div><div class="cred-field"><div class="cred-field-lbl">Username</div><div class="cred-field-val"><span class="cred-field-txt" id="cu-_admin">'+esc(ADMIN.un)+'</span></div></div><div class="cred-field"><div class="cred-field-lbl">Password</div><div class="cred-field-val"><span class="cred-field-txt" id="cp-_admin">••••••</span><button class="cred-eye" onclick="togglePwAdmin()" id="ceye-_admin" title="Show / hide">👁</button></div></div><button class="cred-reset-btn" style="background:linear-gradient(135deg,#8a6400,#D4A843);" onclick="openResetCred(\'_admin\')">✏️ Reset Admin Credentials</button></div>';
+  el.innerHTML=deptCards+adminCard;
 }
 
 function togglePw(k,pw){
@@ -796,12 +839,20 @@ function togglePw(k,pw){
   var isHidden=el.textContent==='••••••';
   el.textContent=isHidden?pw:'••••••';
 }
+function togglePwAdmin(){
+  var el=document.getElementById('cp-_admin');
+  el.textContent=el.textContent==='••••••'?ADMIN.pw:'••••••';
+}
 
 function openResetCred(k){
-  _rcKey=k;var d=DEPTS[k];
-  document.getElementById('rcTtl').textContent='Reset: '+d.icon+' '+d.label;
-  document.getElementById('rc-dept').value=d.label;
-  document.getElementById('rc-un').value=d.un;
+  _rcKey=k;
+  var isAdmin=(k==='_admin');
+  var label=isAdmin?'Admin — Master':DEPTS[k].label;
+  var icon=isAdmin?'👑':DEPTS[k].icon;
+  var currentUn=isAdmin?ADMIN.un:DEPTS[k].un;
+  document.getElementById('rcTtl').textContent='Reset: '+icon+' '+label;
+  document.getElementById('rc-dept').value=label;
+  document.getElementById('rc-un').value=currentUn;
   document.getElementById('rc-pw').value='';
   document.getElementById('rc-pw2').value='';
   document.getElementById('resetCredModal').classList.add('open');
@@ -810,16 +861,18 @@ function closeResetCred(){document.getElementById('resetCredModal').classList.re
 
 async function saveCredential(){
   if(!_rcKey)return;
+  var isAdmin=(_rcKey==='_admin');
   var un=document.getElementById('rc-un').value.trim(),pw=document.getElementById('rc-pw').value.trim(),pw2=document.getElementById('rc-pw2').value.trim();
   if(!un||!pw){toast('Username and password are required','err');return;}
   if(pw!==pw2){toast('Passwords do not match','err');return;}
   // Check username not already used by another dept or admin
   var conflict=false;
   DO.forEach(function(k){if(k!==_rcKey&&DEPTS[k].un===un)conflict=true;});
-  if(ADMIN.un===un)conflict=true;
+  if(!isAdmin&&ADMIN.un===un)conflict=true;
+  if(isAdmin){DO.forEach(function(k){if(DEPTS[k].un===un)conflict=true;});}
   if(conflict){toast('Username already in use by another user','err');return;}
   fbLoading('Saving credentials…');
-  DEPTS[_rcKey].un=un;DEPTS[_rcKey].pw=pw;
+  if(isAdmin){ADMIN.un=un;ADMIN.pw=pw;}else{DEPTS[_rcKey].un=un;DEPTS[_rcKey].pw=pw;}
   try{
     var update={};
     DO.forEach(function(k){update[k]={un:DEPTS[k].un,pw:DEPTS[k].pw};});
