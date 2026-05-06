@@ -10,16 +10,22 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script>
-  firebase.initializeApp({
-    apiKey:"AIzaSyBvUz9ofE4QvuGMeMj4wVK8TOXzYKsJEdk",
-    authDomain:"bill-management-5c07d.firebaseapp.com",
-    projectId:"bill-management-5c07d",
-    storageBucket:"bill-management-5c07d.firebasestorage.app",
-    messagingSenderId:"868034603988",
-    appId:"1:868034603988:web:1a4bc1a8e00d81f94f8441"
-  });
-  window._db = firebase.firestore();
-  window._storage = firebase.storage();
+  try{
+    firebase.initializeApp({
+      apiKey:"AIzaSyBvUz9ofE4QvuGMeMj4wVK8TOXzYKsJEdk",
+      authDomain:"bill-management-5c07d.firebaseapp.com",
+      projectId:"bill-management-5c07d",
+      storageBucket:"bill-management-5c07d.firebasestorage.app",
+      messagingSenderId:"868034603988",
+      appId:"1:868034603988:web:1a4bc1a8e00d81f94f8441"
+    });
+    window._db = firebase.firestore();
+    window._storage = firebase.storage();
+  }catch(e){
+    window._db = null;
+    window._storage = null;
+    console.warn('Firebase unavailable — running in offline mode:', e.message);
+  }
 </script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -370,8 +376,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:#eef5f5;color:#1a2e2e;m
       <div class="lr-title">Welcome Back</div>
       <div class="lr-sub">Sign in with your department credentials to continue</div>
       <div class="lerr" id="lerr">Incorrect username or password.</div>
-      <div class="lfg"><label>Username</label><input type="text" id="luser" placeholder="hk / rm / fb / tr / res / hr / admin" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
-      <div class="lfg"><label style="display:flex;align-items:center;gap:5px;">Password <span class="pw-info-icon" tabindex="0" title="Default passwords: hk→1111 · rm→2222 · fb→3333 · tr→4444 · res→5555 · hr→6666 · admin→0000">ⓘ<div class="pw-tooltip">Default passwords:<br>Housekeeping → 1111<br>Repair &amp; Maint. → 2222<br>F&amp;B Service → 3333<br>Transport → 4444<br>Residence → 5555<br>HR → 6666<br>Admin → 0000</div></span></label><input type="password" id="lpass" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="lfg"><label>Username</label><input type="text" id="luser" placeholder="Enter your username" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="lfg"><label>Password</label><input type="password" id="lpass" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <button class="lbtn" onclick="doLogin()">Sign In →</button>
       <div class="l-hint">Contact admin if you don't have credentials</div>
     </div>
@@ -593,6 +599,8 @@ function ql(u,p){document.getElementById('luser').value=u;document.getElementByI
 async function doLogin(){
   var u=document.getElementById('luser').value.trim().toLowerCase(),p=document.getElementById('lpass').value.trim();
   document.getElementById('lerr').classList.remove('show');
+  if(!u||!p){document.getElementById('lerr').textContent='Please enter username and password.';document.getElementById('lerr').classList.add('show');return;}
+  // Auth is always local — no Firebase needed
   if(u===ADMIN.un&&p===ADMIN.pw){
     CU='admin';isAdm=true;
     await loadAllDeptBills();
@@ -606,12 +614,14 @@ async function doLogin(){
     initDept();
     fbLoading('Loading your data…');
     try{
-      var results=await Promise.all([
-        window._db.collection('depts/'+CU+'/bills').get(),
-        window._db.collection('depts/'+CU+'/budgets').get()
-      ]);
-      bills=[];results[0].forEach(function(d){bills.push(d.data());});
-      budgets=[];results[1].forEach(function(d){budgets.push(d.data());});
+      if(window._db){
+        var results=await Promise.all([
+          window._db.collection('depts/'+CU+'/bills').get(),
+          window._db.collection('depts/'+CU+'/budgets').get()
+        ]);
+        bills=[];results[0].forEach(function(d){bills.push(d.data());});
+        budgets=[];results[1].forEach(function(d){budgets.push(d.data());});
+      }
     }catch(e){bills=[];budgets=[];console.error('login load error',e);}
     fbDone();
     updateAll();
@@ -662,72 +672,35 @@ function fbDone(){
 // Save or delete a single bill — 1 Firestore write, attachment in Storage
 async function sv(billId, del, rawFile){
   if(!CU||isAdm)return;
+  if(!window._db){fbDone();return;}
   try{
     var docRef=window._db.collection('depts/'+CU+'/bills').doc(billId);
     if(del){
-      var existing=bills.find(function(b){return b.id===billId;});
-      if(existing&&existing.storagePath){
-        try{await window._storage.ref(existing.storagePath).delete();}catch(e){}
-      }
       await docRef.delete();
     }else{
       var bill=bills.find(function(b){return b.id===billId;});
       if(!bill)return;
-      if(rawFile||(bill.fileData&&bill.fileData.startsWith('data:'))){
-        fbLoading('Uploading attachment…');
-        var uploadedViaStorage=false;
+      // If a new file was picked, read it to base64 and store in Firestore directly
+      if(rawFile){
+        fbLoading('Saving attachment…');
         try{
-          var storagePath='attachments/'+CU+'/'+billId;
-          var stRef=window._storage.ref(storagePath);
-          var uploadBlob, uploadMime;
-          if(rawFile){
-            uploadBlob=rawFile;
-            uploadMime=rawFile.type||'application/octet-stream';
-          } else {
-            var arr2=bill.fileData.split(','),mime2=arr2[0].match(/:(.*?);/)[1];
-            var bstr2=atob(arr2[1]),n2=bstr2.length,u8b=new Uint8Array(n2);
-            while(n2--){u8b[n2]=bstr2.charCodeAt(n2);}
-            uploadBlob=new Blob([u8b],{type:mime2});
-            uploadMime=mime2;
-          }
-          var uploadTask=stRef.put(uploadBlob,{contentType:uploadMime});
-          await new Promise(function(resolve,reject){
-            var watchdog=setTimeout(function(){uploadTask.cancel();reject(new Error('timeout'));},30000);
-            uploadTask.on('state_changed',
-              function(snap){
-                if(snap.totalBytes>0){
-                  var pct=Math.round(snap.bytesTransferred/snap.totalBytes*100);
-                  fbLoading('Uploading… '+pct+'%');
-                  clearTimeout(watchdog);
-                  watchdog=setTimeout(function(){uploadTask.cancel();reject(new Error('timeout'));},30000);
-                }
-              },
-              function(err){clearTimeout(watchdog);reject(err);},
-              function(){clearTimeout(watchdog);resolve();}
-            );
+          var b64=await new Promise(function(res,rej){
+            var r=new FileReader();
+            r.onload=function(e){res(e.target.result);};
+            r.onerror=rej;
+            r.readAsDataURL(rawFile);
           });
-          var fileURL=await stRef.getDownloadURL();
-          bill.fileURL=fileURL;
-          bill.storagePath=storagePath;
-          delete bill.fileData;
-          uploadedViaStorage=true;
-        }catch(storageErr){
-          console.warn('Storage upload failed, using Firestore fallback:',storageErr.message);
-          fbLoading('Saving attachment…');
-          if(rawFile){
-            try{
-              bill.fileData=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.onerror=rej;r.readAsDataURL(rawFile);});
-            }catch(e){}
-          }
-          uploadedViaStorage=false;
-        }
+          bill.fileData=b64;
+          bill.fileName=rawFile.name;
+        }catch(e){console.warn('File read error',e);}
       }
       var docData=Object.assign({},bill);
-      // If file is small enough for Firestore (<900KB base64), keep it; else strip it
+      // Strip oversized files (Firestore 1MB doc limit)
       if(docData.fileData&&docData.fileData.length>900000){
         delete docData.fileData;
-        toast('File too large for direct save. Use a smaller file or fix Storage rules.','err');
+        toast('File too large (>700KB). Bill saved without attachment.','err');
       }
+      fbLoading('Saving…');
       await docRef.set(docData);
     }
   }catch(e){console.error('sv error',e);toast('Save error: '+e.message,'err');}
@@ -754,12 +727,14 @@ async function loadAllDeptBills(){
   fbLoading('Loading all departments…');
   _adminCache={};
   try{
-    await Promise.all(DO.map(async function(k){
-      var snap=await window._db.collection('depts/'+k+'/bills').get();
-      var arr=[];snap.forEach(function(d){arr.push(d.data());});
-      _adminCache[k]=arr;
-    }));
-  }catch(e){console.error('loadAllDeptBills error',e);}
+    if(window._db){
+      await Promise.all(DO.map(async function(k){
+        var snap=await window._db.collection('depts/'+k+'/bills').get();
+        var arr=[];snap.forEach(function(d){arr.push(d.data());});
+        _adminCache[k]=arr;
+      }));
+    }
+  }catch(e){console.warn('loadAllDeptBills error',e);}
   fbDone();
 }
 
@@ -787,7 +762,7 @@ function openBill(){editId=null;cFile=null;document.getElementById('bmTtl').text
 function openEdit(id){var b=bills.find(function(x){return x.id===id;});if(!b)return;editId=id;cFile=null;document.getElementById('bmTtl').textContent='Edit Vendor Bill';document.getElementById('f-sd').value=b.submissionDate||'';document.getElementById('f-id').value=b.invoiceDate||'';document.getElementById('f-ino').value=b.invoiceNo||'';document.getElementById('f-po').value=b.poNumber||'';document.getElementById('f-vn').value=b.vendorName||'';document.getElementById('f-pt').value=b.particulars||'';document.getElementById('f-am').value=b.amount||'';document.getElementById('f-fi').value='';var fp=document.getElementById('filePrev');if(b.fileName){fp.style.display='block';fp.textContent='📎 '+b.fileName;}else fp.style.display='none';document.getElementById('billModal').classList.add('open');}
 function closeBM2(){document.getElementById('billModal').classList.remove('open');}
 var _fileReady=Promise.resolve();
-function onFile(input){var fp=document.getElementById('filePrev');if(input.files&&input.files[0]){var f=input.files[0];cFile={name:f.name,raw:f};fp.style.display='block';fp.textContent='📎 '+f.name;_fileReady=Promise.resolve();}else{cFile=null;fp.style.display='none';_fileReady=Promise.resolve();}}
+function onFile(input){var fp=document.getElementById('filePrev');if(input.files&&input.files[0]){var f=input.files[0];if(f.size>700000){fp.style.display='block';fp.style.color='#C0392B';fp.textContent='⚠ File too large (max ~700KB). Compress or use a smaller file.';cFile=null;return;}cFile={name:f.name,raw:f};fp.style.display='block';fp.style.color='#006B6B';fp.textContent='📎 '+f.name;_fileReady=Promise.resolve();}else{cFile=null;fp.style.display='none';_fileReady=Promise.resolve();}}
 async function saveBill(){var sd=document.getElementById('f-sd').value,ino=document.getElementById('f-ino').value.trim(),vn=document.getElementById('f-vn').value.trim(),am=document.getElementById('f-am').value;if(!sd||!ino||!vn||!am){toast('Fill in required fields','err');return;}try{await _fileReady;}catch(e){toast('File could not be read. Try again.','err');return;}var data={submissionDate:sd,invoiceDate:document.getElementById('f-id').value,invoiceNo:ino,poNumber:document.getElementById('f-po').value.trim(),vendorName:vn,particulars:document.getElementById('f-pt').value.trim(),amount:parseFloat(am)};var rawFile=null;if(cFile){data.fileName=cFile.name;rawFile=cFile.raw;}if(editId){var idx=bills.findIndex(function(b){return b.id===editId;});var ex=bills[idx];if(!cFile){if(ex.fileData){data.fileName=ex.fileName;data.fileData=ex.fileData;}if(ex.fileURL){data.fileName=data.fileName||ex.fileName;data.fileURL=ex.fileURL;data.storagePath=ex.storagePath;}}bills[idx]=Object.assign({},ex,data);toast('Bill updated ✓');closeBM2();updateAll();await sv(editId,false,rawFile);updateAll();}else{data.id='b'+Date.now();bills.push(data);toast('Bill added ✓');closeBM2();updateAll();await sv(data.id,false,rawFile);updateAll();}}
 function askDel(id){delId=id;document.getElementById('delModal').classList.add('open');}
 function closeDelM(){document.getElementById('delModal').classList.remove('open');delId=null;}
@@ -825,14 +800,7 @@ var _rcKey=null; // dept key being reset
 
 // ── Credentials: load from Firestore, fallback to defaults ──────
 async function loadCredentials(){
-  try{
-    var snap=await window._db.collection('config').doc('credentials').get();
-    if(snap.exists){
-      var data=snap.data();
-      DO.forEach(function(k){if(data[k]){if(data[k].un)DEPTS[k].un=data[k].un;if(data[k].pw)DEPTS[k].pw=data[k].pw;}});
-      if(data._admin){if(data._admin.un)ADMIN.un=data._admin.un;if(data._admin.pw)ADMIN.pw=data._admin.pw;}
-    }
-  }catch(e){console.error('loadCredentials error',e);}
+  // Credentials are hardcoded — no Firestore lookup needed
   renderLoginButtons();
 }
 
@@ -883,26 +851,17 @@ async function saveCredential(){
   var un=document.getElementById('rc-un').value.trim(),pw=document.getElementById('rc-pw').value.trim(),pw2=document.getElementById('rc-pw2').value.trim();
   if(!un||!pw){toast('Username and password are required','err');return;}
   if(pw!==pw2){toast('Passwords do not match','err');return;}
-  // Check username not already used by another dept or admin
   var conflict=false;
   DO.forEach(function(k){if(k!==_rcKey&&DEPTS[k].un===un)conflict=true;});
   if(!isAdmin&&ADMIN.un===un)conflict=true;
   if(isAdmin){DO.forEach(function(k){if(DEPTS[k].un===un)conflict=true;});}
   if(conflict){toast('Username already in use by another user','err');return;}
-  fbLoading('Saving credentials…');
   if(isAdmin){ADMIN.un=un;ADMIN.pw=pw;}else{DEPTS[_rcKey].un=un;DEPTS[_rcKey].pw=pw;}
-  try{
-    var update={};
-    DO.forEach(function(k){update[k]={un:DEPTS[k].un,pw:DEPTS[k].pw};});
-    update['_admin']={un:ADMIN.un,pw:ADMIN.pw};
-    await window._db.collection('config').doc('credentials').set(update);
-    toast('Credentials updated ✓');
-    renderCredentials();
-    renderLoginButtons();
-    closeResetCred();
-    openCredModal();
-  }catch(e){toast('Save error: '+e.message,'err');}
-  fbDone();
+  toast('Credentials updated ✓');
+  renderCredentials();
+  renderLoginButtons();
+  closeResetCred();
+  openCredModal();
 }
 
 // Bootstrap: load credentials before login is interactive
