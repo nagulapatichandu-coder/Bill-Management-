@@ -351,7 +351,47 @@ body{font-family:'Inter',system-ui,sans-serif;background:#eef5f5;color:#1a2e2e;m
 .cred-eye:hover{color:#b88c30;}
 .cred-reset-btn{width:100%;margin-top:4px;background:linear-gradient(135deg,#b88c30,#D4A843);color:#fff;border:none;border-radius:9px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .18s;}
 .cred-reset-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(212,168,67,.36);}
-::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#c8e0e0;border-radius:3px;}
+/* SR/PR/WO/ASSET PR Modal */
+.sr-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+.sr-type-btn{background:#f0f8f8;border:2px solid #c8e0e0;border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .18s;font-family:inherit;}
+.sr-type-btn:hover{border-color:#D4A843;background:rgba(201,168,76,.08);}
+.sr-type-btn.active{border-color:#006B6B;background:rgba(0,107,107,.08);}
+.sr-type-btn .st-icon{font-size:22px;margin-bottom:4px;}
+.sr-type-btn .st-label{font-size:11px;font-weight:700;color:#1a2e2e;letter-spacing:.3px;}
+.sr-type-btn .st-sub{font-size:10px;color:#5A7070;margin-top:1px;}
+/* Date range export modal */
+.date-export-modal{max-width:420px;}
+/* SR Status badges */
+.status-badge{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;border:1.5px solid;}
+.status-badge.Pending{background:rgba(180,130,0,.1);color:#9a6f00;border-color:rgba(180,130,0,.25);}
+.status-badge.Approved{background:rgba(30,130,70,.1);color:#1a7a3e;border-color:rgba(30,130,70,.25);}
+.status-badge.Rejected{background:rgba(192,57,43,.1);color:#C0392B;border-color:rgba(192,57,43,.25);}
+/* Requests tracker page */
+.req-card{background:#fff;border-radius:14px;border:1px solid #c8e0e0;padding:18px;box-shadow:0 2px 10px rgba(0,107,107,.07);margin-bottom:12px;transition:box-shadow .18s;}
+.req-card:hover{box-shadow:0 6px 22px rgba(0,107,107,.12);}
+.req-card-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;}
+.req-card-type{display:inline-flex;align-items:center;gap:6px;background:rgba(0,107,107,.07);color:#006B6B;border:1.5px solid rgba(0,107,107,.15);border-radius:20px;padding:3px 11px;font-size:11px;font-weight:700;white-space:nowrap;}
+.req-card-title{font-size:15px;font-weight:700;color:#1a2e2e;margin:5px 0 2px;}
+.req-card-meta{font-size:11px;color:#5A7070;line-height:1.6;}
+.req-card-body{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0;padding:12px;background:#f8fcfc;border-radius:10px;border:1px solid #e0f2f2;}
+.req-cell{}.req-cell-lbl{font-size:10px;color:#5A7070;text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:3px;}
+.req-cell-val{font-size:13px;font-weight:700;color:#1a2e2e;}
+.req-cell-val.c-approved{color:#1a7a3e;}
+.req-cell-val.c-rejected{color:#C0392B;}
+.req-cell-val.c-pending{color:#9a6f00;}
+.req-card-acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:10px;border-top:1px solid #e0f2f2;margin-top:4px;}
+.req-status-sel{background:#f0f8f8;border:1.5px solid #c8e0e0;border-radius:9px;color:#1a2e2e;font-size:12px;padding:6px 10px;outline:none;font-family:inherit;cursor:pointer;font-weight:600;}
+.req-val-wrap{display:flex;flex-direction:column;gap:3px;}
+.req-val-lbl{font-size:10px;color:#5A7070;font-weight:600;letter-spacing:.5px;text-transform:uppercase;}
+.req-val-inp{background:#f0f8f8;border:1.5px solid #c8e0e0;border-radius:9px;color:#1a2e2e;font-size:12px;padding:6px 10px;outline:none;font-family:inherit;width:140px;}
+.req-val-inp:focus{border-color:#1a7a3e;box-shadow:0 0 0 2px rgba(30,122,62,.1);}
+.req-save-btn{background:linear-gradient(135deg,#004F4F,#006B6B);color:#fff;border:none;border-radius:9px;padding:7px 15px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;}
+.req-save-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,107,107,.3);}
+.req-del-btn{background:#fff5f5;color:#C0392B;border:1px solid #f0c0c0;border-radius:9px;padding:7px 11px;font-size:12px;font-weight:700;cursor:pointer;margin-left:auto;}
+.req-del-btn:hover{background:#C0392B;color:#fff;}
+.req-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+.req-filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#c8e0e0;border-radius:3px;}
 /* Password info icon */
 .pw-info-icon{position:relative;display:inline-flex;align-items:center;cursor:pointer;color:#5A7070;font-style:normal;font-size:13px;font-weight:400;letter-spacing:0;text-transform:none;}
 .pw-info-icon .pw-tooltip{display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 7px);background:#1a2e2e;color:#fff;border-radius:10px;padding:10px 14px;font-size:11.5px;line-height:1.7;white-space:nowrap;z-index:9999;box-shadow:0 6px 20px rgba(0,0,0,.28);pointer-events:none;}
@@ -412,7 +452,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#eef5f5;color:#1a2e2e;m
       <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,#9A7530,#C9A84C)"></div><div class="kpi-ico">🧾</div><div class="kpi-lbl">Total Bills</div><div class="kpi-val" id="kpi-cnt">0</div><div class="kpi-sub">All time</div></div>
       <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,#6B1E2E,#8C2D3F)"></div><div class="kpi-ico">💰</div><div class="kpi-lbl">Total Amount</div><div class="kpi-val" id="kpi-amt">₹0</div><div class="kpi-sub">All vendors</div></div>
       <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,#4A3828,#8A7060)"></div><div class="kpi-ico">📅</div><div class="kpi-lbl">This Month</div><div class="kpi-val" id="kpi-mo">₹0</div><div class="kpi-sub" id="kpi-molbl">—</div></div>
-      <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,#C9A84C,#E8C97A)"></div><div class="kpi-ico">📊</div><div class="kpi-lbl">Avg Bill Value</div><div class="kpi-val" id="kpi-avg">₹0</div><div class="kpi-sub" id="kpi-vcnt">0 vendors</div></div>
+      <div class="kpi" style="cursor:pointer;" onclick="goPage('requests',document.getElementById('ni-requests'))"><div class="kpi-bar" style="background:linear-gradient(90deg,#1a6b8a,#2596be)"></div><div class="kpi-ico">📝</div><div class="kpi-lbl">SR / PR / WO / Asset PR</div><div class="kpi-val" id="kpi-sr-count" style="font-size:20px;font-weight:800;color:#1a6b8a;">0</div><div class="kpi-sub" id="kpi-sr-sub">Click to view requests</div></div>
     </div>
     <div class="g2">
       <div class="card"><div class="card-hd"><div><div class="card-title">Monthly Spend</div><div class="card-sub" id="dyr"></div></div></div><div class="barchart" id="moChart"></div></div>
@@ -494,6 +534,30 @@ body{font-family:'Inter',system-ui,sans-serif;background:#eef5f5;color:#1a2e2e;m
       </table>
     </div>
     <div id="admEmp" class="empty" style="display:none;"><div class="empty-ic">📋</div><h3>No bills yet</h3><p>Bills from all departments will appear here.</p></div>
+  </div>
+
+  <!-- REQUESTS TRACKER PAGE -->
+  <div class="page" id="page-requests">
+    <div class="sechd">
+      <div><div class="sechd-title">📝 Requests Tracker</div><div class="sechd-sub">Track SR / PR / WO / Asset PR with status and values</div></div>
+      <div class="sechd-r"><button class="tbtn tbtn-p" onclick="openSRForm()">+ New Request</button></div>
+    </div>
+    <!-- KPIs -->
+    <div class="req-kpi-row">
+      <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,#1a6b8a,#2596be)"></div><div class="kpi-ico">📋</div><div class="kpi-lbl">Total Requests</div><div class="kpi-val" id="rq-total">0</div><div class="kpi-sub">All types</div></div>
+      <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,#9a6f00,#D4A843)"></div><div class="kpi-ico">⏳</div><div class="kpi-lbl">Pending</div><div class="kpi-val" id="rq-pending">0</div><div class="kpi-sub">Awaiting decision</div></div>
+      <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,#1a7a3e,#2ecc71)"></div><div class="kpi-ico">✅</div><div class="kpi-lbl">Approved</div><div class="kpi-val" id="rq-approved">0</div><div class="kpi-sub" id="rq-approved-amt">₹0 approved value</div></div>
+      <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,#8C2D3F,#C0392B)"></div><div class="kpi-ico">❌</div><div class="kpi-lbl">Rejected</div><div class="kpi-val" id="rq-rejected">0</div><div class="kpi-sub" id="rq-closed-amt">₹0 deal closed</div></div>
+    </div>
+    <!-- Filters -->
+    <div class="req-filter-bar">
+      <select class="fsel" id="rq-type-fil" onchange="renderRequests()"><option value="">All Types</option><option value="SR">Service Request (SR)</option><option value="PR">Purchase Request (PR)</option><option value="WO">Work Order (WO)</option><option value="ASSETPR">Asset PR</option></select>
+      <select class="fsel" id="rq-status-fil" onchange="renderRequests()"><option value="">All Statuses</option><option value="Pending">Pending</option><option value="Approved">Approved</option><option value="Rejected">Rejected</option></select>
+      <div class="spc"></div>
+      <div class="rcnt" id="rq-count"></div>
+    </div>
+    <div id="rqList"></div>
+    <div id="rqEmp" class="empty" style="display:none;"><div class="empty-ic">📝</div><h3>No requests yet</h3><p>Click "+ New Request" to raise an SR, PR, WO or Asset PR.</p></div>
   </div>
 </div>
 </div>
@@ -584,6 +648,78 @@ body{font-family:'Inter',system-ui,sans-serif;background:#eef5f5;color:#1a2e2e;m
   </div>
 </div>
 
+<!-- DATE RANGE EXPORT MODAL -->
+<div class="overlay" id="dateExportModal">
+  <div class="modal date-export-modal">
+    <div class="modal-hd"><div class="modal-ttl">📅 Export Excel — Date Range</div><button class="modal-x" onclick="closeDateExport()">✕</button></div>
+    <div style="background:rgba(0,107,107,.07);border:1.5px solid rgba(0,107,107,.15);border-radius:10px;padding:10px 14px;font-size:12px;color:#006B6B;margin-bottom:16px;">Select a date range to filter bills by <strong>Submission Date</strong>. Leave both blank to export all bills.</div>
+    <div class="fg2" style="margin-bottom:14px;">
+      <div class="fg"><label class="fl">From Date</label><input class="fi" type="date" id="exp-from" oninput="updateExpPreview()"></div>
+      <div class="fg"><label class="fl">To Date</label><input class="fi" type="date" id="exp-to" oninput="updateExpPreview()"></div>
+    </div>
+    <div id="exp-preview" style="font-size:12px;color:#5A7070;margin-bottom:14px;padding:8px 12px;background:#f0f8f8;border-radius:8px;border:1px solid #c8e0e0;min-height:32px;"></div>
+    <div class="f-acts">
+      <button class="f-cancel" onclick="closeDateExport()">Cancel</button>
+      <button class="f-save" onclick="doExcelExport()" style="background:linear-gradient(135deg,#b88c30,#D4A843);">⬇ Export Excel</button>
+    </div>
+  </div>
+</div>
+
+<!-- SR / PR / WO / ASSET PR MODAL -->
+<div class="overlay" id="srModal">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-hd"><div class="modal-ttl" id="srModalTtl">📝 Raise a Request</div><button class="modal-x" onclick="closeSRForm()">✕</button></div>
+    <!-- Type selector -->
+    <div class="sr-type-grid" id="srTypeGrid">
+      <div class="sr-type-btn active" id="srt-SR" onclick="setSRType('SR')"><div class="st-icon">🛎</div><div class="st-label">Service Request (SR)</div><div class="st-sub">General service / housekeeping</div></div>
+      <div class="sr-type-btn" id="srt-PR" onclick="setSRType('PR')"><div class="st-icon">🛒</div><div class="st-label">Purchase Request (PR)</div><div class="st-sub">Raise a purchase / procurement</div></div>
+      <div class="sr-type-btn" id="srt-WO" onclick="setSRType('WO')"><div class="st-icon">🔧</div><div class="st-label">Work Order (WO)</div><div class="st-sub">Maintenance / repair work</div></div>
+      <div class="sr-type-btn" id="srt-ASSETPR" onclick="setSRType('ASSETPR')"><div class="st-icon">🏗</div><div class="st-label">Asset PR</div><div class="st-sub">Asset purchase requisition</div></div>
+    </div>
+    <!-- Common fields -->
+    <div class="fg2">
+      <div class="fg"><label class="fl">Request Date *</label><input class="fi" type="date" id="sr-date"></div>
+      <div class="fg"><label class="fl">Priority</label>
+        <select class="fi" id="sr-priority"><option value="Normal">Normal</option><option value="Urgent">Urgent</option><option value="Critical">Critical</option></select>
+      </div>
+      <div class="fg full"><label class="fl">Requested By *</label><input class="fi" type="text" id="sr-reqby" placeholder="Name of requester"></div>
+      <div class="fg full"><label class="fl">Description / Particulars *</label><input class="fi" type="text" id="sr-desc" placeholder="Brief description of the request"></div>
+
+      <!-- SR-specific -->
+      <div class="fg full sr-field sr-SR"><label class="fl">Location / Area</label><input class="fi" type="text" id="sr-location" placeholder="e.g. Block A, Room 204"></div>
+
+      <!-- PR-specific -->
+      <div class="fg sr-field sr-PR sr-ASSETPR"><label class="fl">Item / Asset Name *</label><input class="fi" type="text" id="sr-item" placeholder="e.g. Office Chair"></div>
+      <div class="fg sr-field sr-PR sr-ASSETPR"><label class="fl">Quantity</label><input class="fi" type="number" id="sr-qty" placeholder="1" min="1"></div>
+      <div class="fg sr-field sr-PR sr-ASSETPR"><label class="fl">Estimated Cost (₹)</label><input class="fi" type="number" id="sr-cost" placeholder="0.00" min="0" step="0.01"></div>
+      <div class="fg sr-field sr-PR sr-ASSETPR"><label class="fl">Preferred Vendor</label><input class="fi" type="text" id="sr-vendor" placeholder="Vendor name (optional)"></div>
+
+      <!-- WO-specific -->
+      <div class="fg sr-field sr-WO"><label class="fl">Asset / Equipment</label><input class="fi" type="text" id="sr-asset" placeholder="e.g. Generator, AC Unit"></div>
+      <div class="fg sr-field sr-WO"><label class="fl">Assigned To</label><input class="fi" type="text" id="sr-assignee" placeholder="Technician or vendor name"></div>
+      <div class="fg sr-field sr-WO"><label class="fl">Expected Completion</label><input class="fi" type="date" id="sr-completion"></div>
+      <div class="fg sr-field sr-WO"><label class="fl">Estimated Cost (₹)</label><input class="fi" type="number" id="sr-wo-cost" placeholder="0.00" min="0" step="0.01"></div>
+
+      <!-- ASSETPR additional -->
+      <div class="fg full sr-field sr-ASSETPR"><label class="fl">Justification</label><input class="fi" type="text" id="sr-justification" placeholder="Why is this asset needed?"></div>
+
+      <div class="fg full"><label class="fl">Remarks</label><input class="fi" type="text" id="sr-remarks" placeholder="Any additional notes (optional)"></div>
+
+      <!-- Status & Value fields (always visible) -->
+      <div class="fg"><label class="fl">Status</label>
+        <select class="fi" id="sr-status" onchange="toggleSRValueFields()">
+          <option value="Pending">⏳ Pending</option>
+          <option value="Approved">✅ Approved</option>
+          <option value="Rejected">❌ Rejected</option>
+        </select>
+      </div>
+      <div class="fg" id="sr-approved-val-wrap" style="display:none;"><label class="fl">Approved Value (₹)</label><input class="fi" type="number" id="sr-approved-val" placeholder="0.00" min="0" step="0.01"></div>
+      <div class="fg" id="sr-deal-closed-wrap" style="display:none;"><label class="fl">Deal Closed Value (₹)</label><input class="fi" type="number" id="sr-deal-closed" placeholder="0.00" min="0" step="0.01"></div>
+    </div>
+    <div class="f-acts"><button class="f-cancel" onclick="closeSRForm()">Cancel</button><button class="f-save" onclick="saveSRForm()">Submit Request</button></div>
+  </div>
+</div>
+
 <div id="toast">Saved</div>
 
 <script>
@@ -610,33 +746,35 @@ async function doLogin(){
   DO.forEach(function(k){if(DEPTS[k].un===u&&DEPTS[k].pw===p)matchKey=k;});
   if(matchKey){
     CU=matchKey;isAdm=false;
-    bills=[];budgets=[];
+    bills=[];budgets=[];srRequests=[];
     initDept();
     fbLoading('Loading your data…');
     try{
       if(window._db){
         var results=await Promise.all([
           window._db.collection('depts/'+CU+'/bills').get(),
-          window._db.collection('depts/'+CU+'/budgets').get()
+          window._db.collection('depts/'+CU+'/budgets').get(),
+          window._db.collection('depts/'+CU+'/requests').get()
         ]);
         bills=[];results[0].forEach(function(d){bills.push(d.data());});
         budgets=[];results[1].forEach(function(d){budgets.push(d.data());});
+        srRequests=[];results[2].forEach(function(d){srRequests.push(d.data());});
       }
-    }catch(e){bills=[];budgets=[];console.error('login load error',e);}
+    }catch(e){bills=[];budgets=[];srRequests=[];console.error('login load error',e);}
     fbDone();
     updateAll();
     return;
   }
   document.getElementById('lerr').classList.add('show');
 }
-function doLogout(){CU=null;isAdm=false;bills=[];budgets=[];document.getElementById('luser').value='';document.getElementById('lpass').value='';document.getElementById('appWrap').style.display='none';document.getElementById('loginWrap').style.display='flex';}
+function doLogout(){CU=null;isAdm=false;bills=[];budgets=[];srRequests=[];document.getElementById('luser').value='';document.getElementById('lpass').value='';document.getElementById('appWrap').style.display='none';document.getElementById('loginWrap').style.display='flex';}
 
 function initDept(){
   var d=DEPTS[CU];
   document.getElementById('sbDept').textContent=d.icon+' '+d.label;document.getElementById('sbDept').className='sb-dept';
   document.getElementById('tbDept').textContent=d.label;
-  document.getElementById('sbNav').innerHTML='<div class="sb-sec">Views</div>'+ni('dashboard','◈','Dashboard')+ni('bills','☰','All Bills')+ni('budget','⚖','Budget vs Actuals')+'<div class="sb-sec">Export</div><div class="ni" onclick="exportExcel()"><span class="ni-icon">⬇</span>Export Excel</div><div class="ni" onclick="exportCSV()"><span class="ni-icon">📄</span>Export CSV</div>';
-  document.getElementById('tbR').innerHTML='<div class="tb-user"><div class="tb-av">'+d.icon+'</div><div><div class="tb-un">'+d.label+'</div><div class="tb-ur">Department</div></div></div><div class="tb-div"></div><button class="tbtn tbtn-s" onclick="exportExcel()">⬇ Excel</button><button class="tbtn tbtn-p" onclick="openBill()">+ Add Bill</button>';
+  document.getElementById('sbNav').innerHTML='<div class="sb-sec">Views</div>'+ni('dashboard','◈','Dashboard')+ni('bills','☰','All Bills')+ni('budget','⚖','Budget vs Actuals')+ni('requests','📝','Requests')+'<div class="sb-sec">Export</div><div class="ni" onclick="openDateExport()"><span class="ni-icon">⬇</span>Export Excel</div><div class="ni" onclick="exportCSV()"><span class="ni-icon">📄</span>Export CSV</div>';
+  document.getElementById('tbR').innerHTML='<div class="tb-user"><div class="tb-av">'+d.icon+'</div><div><div class="tb-un">'+d.label+'</div><div class="tb-ur">Department</div></div></div><div class="tb-div"></div><button class="tbtn tbtn-s" onclick="openDateExport()">⬇ Excel</button><button class="tbtn tbtn-p" onclick="openBill()">+ Add Bill</button>';
   showApp();goPage('dashboard');updateAll();
 }
 function initAdm(){
@@ -652,9 +790,9 @@ function showApp(){document.getElementById('loginWrap').style.display='none';doc
 function goPage(id,el){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});var pg=document.getElementById('page-'+id);if(pg)pg.classList.add('active');
   document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active');});if(el)el.classList.add('active');else{var n=document.getElementById('ni-'+id);if(n)n.classList.add('active');}
-  var T={dashboard:'Dashboard',bills:'All Bills',budget:'Budget vs Actuals',admin:'Master Dashboard'};
+  var T={dashboard:'Dashboard',bills:'All Bills',budget:'Budget vs Actuals',admin:'Master Dashboard',requests:'Requests Tracker'};
   document.getElementById('tbTitle').textContent=T[id]||id;document.getElementById('tbPg').textContent=T[id]||id;
-  if(id==='budget')renderBudget();if(id==='admin')renderAdmin();if(id==='dashboard'&&!isAdm)updateAll();
+  if(id==='budget')renderBudget();if(id==='admin')renderAdmin();if(id==='dashboard'&&!isAdm)updateAll();if(id==='requests')renderRequests();
 }
 
 // ── Firebase helpers (compat SDK) ────────────────────────────────
@@ -748,8 +886,12 @@ function getAllBills(){
 }
 
 function updateAll(){var t=bills.reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);document.getElementById('sbTotal').textContent='₹'+fa(t);rKPIs();rMoChart();rDonut();rVBars();rRecent();popFilters();renderBills();}
-function rKPIs(){var total=bills.length,amt=bills.reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0),now=new Date(),mAmt=bills.filter(function(b){if(!b.submissionDate)return false;var d=new Date(b.submissionDate);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}).reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0),avg=total?amt/total:0,vc=new Set(bills.map(function(b){return b.vendorName;})).size;
-  document.getElementById('kpi-cnt').textContent=total;document.getElementById('kpi-amt').textContent='₹'+fa(amt);document.getElementById('kpi-mo').textContent='₹'+fa(mAmt);document.getElementById('kpi-molbl').textContent=now.toLocaleString('default',{month:'long',year:'numeric'});document.getElementById('kpi-avg').textContent='₹'+fa(avg);document.getElementById('kpi-vcnt').textContent=vc+' vendor'+(vc!==1?'s':'');}
+function rKPIs(){var total=bills.length,amt=bills.reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0),now=new Date(),mAmt=bills.filter(function(b){if(!b.submissionDate)return false;var d=new Date(b.submissionDate);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}).reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);
+  document.getElementById('kpi-cnt').textContent=total;document.getElementById('kpi-amt').textContent='₹'+fa(amt);document.getElementById('kpi-mo').textContent='₹'+fa(mAmt);document.getElementById('kpi-molbl').textContent=now.toLocaleString('default',{month:'long',year:'numeric'});
+  // SR KPI tile
+  var srEl=document.getElementById('kpi-sr-count');var srSub=document.getElementById('kpi-sr-sub');
+  if(srEl){var rTotal=srRequests.length,rPend=srRequests.filter(function(r){return(r.status||'Pending')==='Pending';}).length,rAppr=srRequests.filter(function(r){return r.status==='Approved';}).length;srEl.textContent=rTotal;if(srSub)srSub.textContent=(rPend?rPend+' pending':rTotal?rAppr+' approved':'Click to view requests');}
+}
 function rMoChart(){var now=new Date(),yr=now.getFullYear();document.getElementById('dyr').textContent=yr;var mo=[0,0,0,0,0,0,0,0,0,0,0,0];bills.forEach(function(b){if(!b.submissionDate)return;var d=new Date(b.submissionDate);if(d.getFullYear()===yr)mo[d.getMonth()]+=parseFloat(b.amount)||0;});var max=Math.max.apply(null,mo.concat([1]));document.getElementById('moChart').innerHTML=mo.map(function(v,i){var c=i===now.getMonth();return'<div class="bg"><div class="bval">'+(v>0?'₹'+fas(v):'')+'</div><div class="bw"><div class="bar'+(c?' cur':'')+'" style="height:'+Math.max(v/max*100,2)+'%" title="'+MO[i]+': ₹'+fa(v)+'"></div></div><div class="blbl">'+MO[i]+'</div></div>';}).join('');}
 function rDonut(){var bV={};bills.forEach(function(b){if(b.vendorName)bV[b.vendorName]=(bV[b.vendorName]||0)+(parseFloat(b.amount)||0);});var sorted=Object.entries(bV).sort(function(a,b){return b[1]-a[1];}).slice(0,6);var tot=sorted.reduce(function(s,e){return s+e[1];},0);var svg=document.getElementById('donutSvg'),leg=document.getElementById('donutLeg');if(!sorted.length){svg.innerHTML='<circle cx="60" cy="60" r="42" fill="none" stroke="#E8DCC8" stroke-width="16"/>';leg.innerHTML='<div style="font-size:12px;color:#8A7060">No data yet</div>';return;}var cx=60,cy=60,r=42,sw=16,ci=2*Math.PI*r,of=0;var p='<circle cx="60" cy="60" r="42" fill="none" stroke="#E8DCC8" stroke-width="16"/>';sorted.forEach(function(e,i){var pc=e[1]/tot,da=pc*ci,ga=ci-da;p+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+CLR[i]+'" stroke-width="'+sw+'" stroke-dasharray="'+da+' '+ga+'" stroke-dashoffset="'+(-of)+'" transform="rotate(-90 '+cx+' '+cy+')"></circle>';of+=da;});svg.innerHTML=p;leg.innerHTML=sorted.map(function(e,i){return'<div class="dli"><div class="dld" style="background:'+CLR[i]+'"></div><div class="dln" title="'+esc(e[0])+'">'+esc(e[0])+'</div><div class="dlp">'+((e[1]/tot)*100).toFixed(0)+'%</div></div>';}).join('');}
 function rVBars(){var bV={};bills.forEach(function(b){if(b.vendorName)bV[b.vendorName]=(bV[b.vendorName]||0)+(parseFloat(b.amount)||0);});var sorted=Object.entries(bV).sort(function(a,b){return b[1]-a[1];}).slice(0,5);var el=document.getElementById('vBars'),em=document.getElementById('vBarsEmp');if(!sorted.length){el.innerHTML='';em.style.display='block';return;}em.style.display='none';var max=sorted[0][1];el.innerHTML=sorted.map(function(e){return'<div class="vbi"><div class="vbt"><div class="vbn">'+esc(e[0])+'</div><div class="vba">₹'+fas(e[1])+'</div></div><div class="vbtr"><div class="vbf" style="width:'+(e[1]/max*100).toFixed(1)+'%"></div></div></div>';}).join('');}
@@ -787,10 +929,235 @@ function renderAdmin(){var all=getAllBills(),now=new Date();var gt=all.reduce(fu
 function asrt(f){if(aSF===f)aSD*=-1;else{aSF=f;aSD=1;}renderAdminTable();}
 function renderAdminTable(){var all=getAllBills(),df=document.getElementById('admDF').value;var f=all.filter(function(b){return!df||b._dk===df;});f.sort(function(a,b){var va=a[aSF]||'',vb=b[aSF]||'';if(aSF==='amount'){va=parseFloat(va)||0;vb=parseFloat(vb)||0;}return va<vb?-aSD:va>vb?aSD:0;});var tb=document.getElementById('admBody'),em=document.getElementById('admEmp');if(!f.length){tb.innerHTML='';em.style.display='block';return;}em.style.display='none';tb.innerHTML=f.map(function(b){var d=DEPTS[b._dk];return'<tr><td><span style="display:inline-flex;align-items:center;gap:5px;background:'+d.color+'18;color:'+d.color+';border:1px solid '+d.color+'33;border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;">'+d.icon+' '+d.label+'</span></td><td>'+fd(b.submissionDate)+'</td><td style="color:#6B1E2E;font-weight:700">'+esc(b.invoiceNo)+'</td><td style="font-weight:600">'+esc(b.vendorName)+'</td><td style="color:#8A7060;max-width:170px;overflow:hidden;text-overflow:ellipsis">'+esc(b.particulars)+'</td><td style="font-weight:800;color:#9A7530;font-weight:800">₹'+fa(parseFloat(b.amount||0))+'</td></tr>';}).join('');}
 
-function exportCSV(){if(!bills.length){toast('No bills to export','err');return;}var d=DEPTS[CU].label;var rows=[['Submission Date','Invoice Date','Invoice No','PO/WO No','Vendor Name','Particulars','Amount (₹)']];bills.forEach(function(b){rows.push([b.submissionDate||'',b.invoiceDate||'',b.invoiceNo||'',b.poNumber||'',b.vendorName||'',b.particulars||'',b.amount||'']);});var csv=rows.map(function(r){return r.map(function(c){return'"'+(c+'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='Bills_'+d+'_'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('CSV exported ✓');}
-function exportExcel(){if(!bills.length){toast('No bills to export','err');return;}var d=DEPTS[CU].label;var wd=[['Submission Date','Invoice Date','Invoice No','PO/WO No','Vendor Name','Particulars','Amount (₹)']];bills.forEach(function(b){wd.push([b.submissionDate||'',b.invoiceDate||'',b.invoiceNo||'',b.poNumber||'',b.vendorName||'',b.particulars||'',parseFloat(b.amount)||0]);});var wb=XLSX.utils.book_new();var ws=XLSX.utils.aoa_to_sheet(wd);ws['!cols']=[{wch:14},{wch:12},{wch:16},{wch:16},{wch:28},{wch:32},{wch:14}];XLSX.utils.book_append_sheet(wb,ws,d.substring(0,31));XLSX.writeFile(wb,'Bills_'+d+'_'+new Date().toISOString().slice(0,10)+'.xlsx');toast('Excel exported ✓');}
-function exportAdminCSV(){var all=getAllBills();if(!all.length){toast('No bills','err');return;}var rows=[['Department','Submission Date','Invoice Date','Invoice No','PO/WO No','Vendor Name','Particulars','Amount (₹)']];all.forEach(function(b){rows.push([b._dl,b.submissionDate||'',b.invoiceDate||'',b.invoiceNo||'',b.poNumber||'',b.vendorName||'',b.particulars||'',b.amount||'']);});var csv=rows.map(function(r){return r.map(function(c){return'"'+(c+'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='GITAM_Hospitality_AllDepts_'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('CSV exported ✓');}
-function exportAdminExcel(){var all=getAllBills();if(!all.length){toast('No bills','err');return;}var wb=XLSX.utils.book_new();var sum=[['Department','Total Bills','Total Amount (₹)']];DO.forEach(function(k){var d=DEPTS[k];var arr=all.filter(function(b){return b._dk===k;});var amt=arr.reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);sum.push([d.label,arr.length,amt]);});var wsS=XLSX.utils.aoa_to_sheet(sum);wsS['!cols']=[{wch:24},{wch:12},{wch:16}];XLSX.utils.book_append_sheet(wb,wsS,'Summary');DO.forEach(function(k){var d=DEPTS[k];var arr=all.filter(function(b){return b._dk===k;});var rows=[['Submission Date','Invoice Date','Invoice No','PO/WO No','Vendor Name','Particulars','Amount (₹)']];arr.forEach(function(b){rows.push([b.submissionDate||'',b.invoiceDate||'',b.invoiceNo||'',b.poNumber||'',b.vendorName||'',b.particulars||'',parseFloat(b.amount)||0]);});var ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:14},{wch:12},{wch:16},{wch:16},{wch:28},{wch:32},{wch:14}];XLSX.utils.book_append_sheet(wb,ws,d.label.substring(0,31));});XLSX.writeFile(wb,'GITAM_Hospitality_AllDepts_'+new Date().toISOString().slice(0,10)+'.xlsx');toast('Excel exported ✓');}
+function exportCSV(){if(!bills.length){toast('No bills to export','err');return;}var d=DEPTS[CU].label;var rows=[['Submission Date','Invoice Date','Invoice No','PO/WO No','Vendor Name','Particulars','Amount (₹)']];bills.forEach(function(b){rows.push([fmtDate(b.submissionDate),fmtDate(b.invoiceDate),b.invoiceNo||'',b.poNumber||'',b.vendorName||'',b.particulars||'',b.amount||'']);});var csv=rows.map(function(r){return r.map(function(c){return'"'+(c+'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='Bills_'+d+'_'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('CSV exported ✓');}
+function openDateExport(){
+  if(!bills.length){toast('No bills to export','err');return;}
+  // Set default date range based on existing bills
+  var dates=bills.map(function(b){return b.submissionDate||'';}).filter(Boolean).sort();
+  document.getElementById('exp-from').value=dates.length?dates[0]:'';
+  document.getElementById('exp-to').value=dates.length?dates[dates.length-1]:'';
+  updateExpPreview();
+  document.getElementById('dateExportModal').classList.add('open');
+}
+function closeDateExport(){document.getElementById('dateExportModal').classList.remove('open');}
+function updateExpPreview(){
+  var from=document.getElementById('exp-from').value,to=document.getElementById('exp-to').value;
+  var filtered=getFilteredBillsForExport(from,to);
+  var el=document.getElementById('exp-preview');
+  if(!from&&!to){el.textContent='All '+bills.length+' bill(s) will be exported.';}
+  else{el.textContent=filtered.length+' bill(s) match the selected date range.';}
+}
+function getFilteredBillsForExport(from,to){
+  return bills.filter(function(b){
+    var d=b.submissionDate||'';
+    if(!d)return(!from&&!to);
+    if(from&&d<from)return false;
+    if(to&&d>to)return false;
+    return true;
+  });
+}
+function fmtDate(d){if(!d)return'';var p=d.split('-');if(p.length!==3)return d;return p[2]+'/'+p[1]+'/'+p[0].slice(2);}
+
+function doExcelExport(){
+  var from=document.getElementById('exp-from').value,to=document.getElementById('exp-to').value;
+  var filtered=getFilteredBillsForExport(from,to);
+  if(!filtered.length){toast('No bills in selected date range','err');return;}
+  var d=DEPTS[CU].label;
+  var wd=[['Submission Date','Invoice Date','Invoice No','PO/WO No','Vendor Name','Particulars','Amount (₹)']];
+  filtered.forEach(function(b){wd.push([fmtDate(b.submissionDate),fmtDate(b.invoiceDate),b.invoiceNo||'',b.poNumber||'',b.vendorName||'',b.particulars||'',parseFloat(b.amount)||0]);});
+  var wb=XLSX.utils.book_new();
+  var ws=XLSX.utils.aoa_to_sheet(wd);
+  ws['!cols']=[{wch:14},{wch:12},{wch:16},{wch:16},{wch:28},{wch:32},{wch:14}];
+  var suffix=(from||to)?('_'+( from||'start')+'_to_'+(to||'end')):'_All';
+  XLSX.utils.book_append_sheet(wb,ws,d.substring(0,31));
+  XLSX.writeFile(wb,'Bills_'+d+suffix+'.xlsx');
+  closeDateExport();
+  toast('Excel exported ✓ ('+filtered.length+' bills)');
+}
+
+function exportExcel(){openDateExport();}
+
+// ── SR / PR / WO / ASSET PR ─────────────────────────────────────
+var _srType='SR';
+var srRequests=[];
+var _srEditId=null;
+
+function openSRForm(editId){
+  _srEditId=editId||null;
+  if(editId){
+    var req=srRequests.find(function(r){return r.id===editId;});
+    if(!req)return;
+    setSRType(req.type||'SR');
+    document.getElementById('srModalTtl');
+    document.getElementById('sr-date').value=req.date||'';
+    document.getElementById('sr-priority').value=req.priority||'Normal';
+    document.getElementById('sr-reqby').value=req.requestedBy||'';
+    document.getElementById('sr-desc').value=req.description||'';
+    document.getElementById('sr-remarks').value=req.remarks||'';
+    document.getElementById('sr-status').value=req.status||'Pending';
+    document.getElementById('sr-approved-val').value=req.approvedValue||'';
+    document.getElementById('sr-deal-closed').value=req.dealClosedValue||'';
+    toggleSRValueFields();
+    // type fields
+    if(req.type==='SR')document.getElementById('sr-location').value=req.location||'';
+    if(req.type==='PR'||req.type==='ASSETPR'){document.getElementById('sr-item').value=req.item||'';document.getElementById('sr-qty').value=req.quantity||'';document.getElementById('sr-cost').value=req.estimatedCost||'';document.getElementById('sr-vendor').value=req.vendor||'';}
+    if(req.type==='ASSETPR')document.getElementById('sr-justification').value=req.justification||'';
+    if(req.type==='WO'){document.getElementById('sr-asset').value=req.asset||'';document.getElementById('sr-assignee').value=req.assignee||'';document.getElementById('sr-completion').value=req.completion||'';document.getElementById('sr-wo-cost').value=req.estimatedCost||'';}
+  } else {
+    setSRType('SR');
+    document.getElementById('sr-date').value=new Date().toISOString().slice(0,10);
+    document.getElementById('sr-priority').value='Normal';
+    document.getElementById('sr-status').value='Pending';
+    document.getElementById('sr-approved-val').value='';
+    document.getElementById('sr-deal-closed').value='';
+    toggleSRValueFields();
+    ['sr-reqby','sr-desc','sr-location','sr-item','sr-qty','sr-cost','sr-vendor','sr-asset','sr-assignee','sr-completion','sr-wo-cost','sr-justification','sr-remarks'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  }
+  document.getElementById('srModal').classList.add('open');
+}
+function closeSRForm(){document.getElementById('srModal').classList.remove('open');_srEditId=null;}
+
+function toggleSRValueFields(){
+  var st=document.getElementById('sr-status').value;
+  document.getElementById('sr-approved-val-wrap').style.display=(st==='Approved')?'flex':'none';
+  document.getElementById('sr-deal-closed-wrap').style.display=(st==='Approved')?'flex':'none';
+}
+
+function setSRType(t){
+  _srType=t;
+  ['SR','PR','WO','ASSETPR'].forEach(function(k){
+    document.getElementById('srt-'+k).classList.toggle('active',k===t);
+  });
+  document.querySelectorAll('.sr-field').forEach(function(el){el.style.display='none';});
+  document.querySelectorAll('.sr-'+t).forEach(function(el){el.style.display='flex';});
+  var titles={SR:'🛎 Service Request (SR)',PR:'🛒 Purchase Request (PR)',WO:'🔧 Work Order (WO)',ASSETPR:'🏗 Asset Purchase Requisition'};
+  document.getElementById('srModalTtl').textContent=titles[t]||'📝 Raise a Request';
+}
+
+function saveSRForm(){
+  var date=document.getElementById('sr-date').value;
+  var reqby=document.getElementById('sr-reqby').value.trim();
+  var desc=document.getElementById('sr-desc').value.trim();
+  if(!date||!reqby||!desc){toast('Fill in required fields','err');return;}
+  var status=document.getElementById('sr-status').value;
+  var approvedVal=status==='Approved'?parseFloat(document.getElementById('sr-approved-val').value)||0:0;
+  var dealClosed=status==='Approved'?parseFloat(document.getElementById('sr-deal-closed').value)||0:0;
+  var req={id:_srEditId||'sr'+Date.now(),type:_srType,date:date,priority:document.getElementById('sr-priority').value,requestedBy:reqby,description:desc,remarks:document.getElementById('sr-remarks').value.trim(),status:status,approvedValue:approvedVal,dealClosedValue:dealClosed,dept:CU?DEPTS[CU].label:'',deptIcon:CU?DEPTS[CU].icon:'',createdAt:_srEditId?(srRequests.find(function(r){return r.id===_srEditId;})||{}).createdAt||new Date().toISOString():new Date().toISOString()};
+  if(_srType==='SR')req.location=document.getElementById('sr-location').value.trim();
+  if(_srType==='PR'||_srType==='ASSETPR'){req.item=document.getElementById('sr-item').value.trim();req.quantity=document.getElementById('sr-qty').value;req.estimatedCost=document.getElementById('sr-cost').value;req.vendor=document.getElementById('sr-vendor').value.trim();}
+  if(_srType==='ASSETPR')req.justification=document.getElementById('sr-justification').value.trim();
+  if(_srType==='WO'){req.asset=document.getElementById('sr-asset').value.trim();req.assignee=document.getElementById('sr-assignee').value.trim();req.completion=document.getElementById('sr-completion').value;req.estimatedCost=document.getElementById('sr-wo-cost').value;}
+  if(_srEditId){var idx=srRequests.findIndex(function(r){return r.id===_srEditId;});if(idx>=0)srRequests[idx]=req;else srRequests.push(req);}
+  else{srRequests.push(req);}
+  if(window._db&&CU&&!isAdm){window._db.collection('depts/'+CU+'/requests').doc(req.id).set(req).catch(function(e){console.warn('SR save error',e);});}
+  closeSRForm();
+  toast((_srEditId?'Request updated ✓':req.type+' submitted ✓'));
+  // Navigate to Requests page so user sees the submitted request immediately
+  goPage('requests', document.getElementById('ni-requests'));
+}
+
+function updateReqStatus(id){
+  var req=srRequests.find(function(r){return r.id===id;});if(!req)return;
+  var st=document.getElementById('rqst-'+id).value;
+  var av=parseFloat(document.getElementById('rqav-'+id).value)||0;
+  var dc=parseFloat(document.getElementById('rqdc-'+id).value)||0;
+  req.status=st;req.approvedValue=av;req.dealClosedValue=dc;
+  if(window._db&&CU&&!isAdm){window._db.collection('depts/'+CU+'/requests').doc(id).set(req).catch(function(e){console.warn(e);});}
+  toast('Status updated ✓');renderRequests();
+}
+
+function deleteRequest(id){
+  srRequests=srRequests.filter(function(r){return r.id!==id;});
+  if(window._db&&CU&&!isAdm){window._db.collection('depts/'+CU+'/requests').doc(id).delete().catch(function(e){console.warn(e);});}
+  toast('Request deleted');renderRequests();
+}
+
+function renderRequests(){
+  var typeFil=document.getElementById('rq-type-fil')?document.getElementById('rq-type-fil').value:'';
+  var stFil=document.getElementById('rq-status-fil')?document.getElementById('rq-status-fil').value:'';
+  var fil=srRequests.filter(function(r){return(!typeFil||r.type===typeFil)&&(!stFil||r.status===stFil);});
+  fil.sort(function(a,b){return(b.createdAt||'').localeCompare(a.createdAt||'');});
+  // KPIs
+  var total=srRequests.length,pend=srRequests.filter(function(r){return(r.status||'Pending')==='Pending';}).length;
+  var appr=srRequests.filter(function(r){return r.status==='Approved';});
+  var apprAmt=appr.reduce(function(s,r){return s+(r.approvedValue||0);},0);
+  var closedAmt=appr.reduce(function(s,r){return s+(r.dealClosedValue||0);},0);
+  var rej=srRequests.filter(function(r){return r.status==='Rejected';}).length;
+  var el=document.getElementById('rq-total');if(el)el.textContent=total;
+  el=document.getElementById('rq-pending');if(el)el.textContent=pend;
+  el=document.getElementById('rq-approved');if(el)el.textContent=appr.length;
+  el=document.getElementById('rq-approved-amt');if(el)el.textContent='₹'+fa(apprAmt)+' approved value';
+  el=document.getElementById('rq-rejected');if(el)el.textContent=rej;
+  el=document.getElementById('rq-closed-amt');if(el)el.textContent='₹'+fa(closedAmt)+' deal closed';
+  el=document.getElementById('rq-count');if(el)el.textContent=fil.length+' request'+(fil.length!==1?'s':'');
+  var list=document.getElementById('rqList'),emp=document.getElementById('rqEmp');
+  if(!list)return;
+  if(!fil.length){list.innerHTML='';if(emp)emp.style.display='block';return;}
+  if(emp)emp.style.display='none';
+  var typeIcons={SR:'🛎',PR:'🛒',WO:'🔧',ASSETPR:'🏗'};
+  var typeLabels={SR:'Service Request',PR:'Purchase Request',WO:'Work Order',ASSETPR:'Asset PR'};
+  var priorityColors={Normal:'#5A7070',Urgent:'#E67E22',Critical:'#C0392B'};
+  list.innerHTML=fil.map(function(r){
+    var st=r.status||'Pending';
+    var stColor={Pending:'#9a6f00',Approved:'#1a7a3e',Rejected:'#C0392B'}[st]||'#5A7070';
+    var stBg={Pending:'rgba(180,130,0,.1)',Approved:'rgba(30,130,70,.1)',Rejected:'rgba(192,57,43,.1)'}[st]||'#f0f8f8';
+    var stBorder={Pending:'rgba(180,130,0,.25)',Approved:'rgba(30,130,70,.25)',Rejected:'rgba(192,57,43,.25)'}[st]||'#c8e0e0';
+    var stEmoji={Pending:'⏳',Approved:'✅',Rejected:'❌'}[st]||'⏳';
+    var details='';
+    if(r.type==='SR'&&r.location)details+='<div class="req-cell"><div class="req-cell-lbl">Location</div><div class="req-cell-val">'+esc(r.location)+'</div></div>';
+    if((r.type==='PR'||r.type==='ASSETPR')&&r.item)details+='<div class="req-cell"><div class="req-cell-lbl">Item</div><div class="req-cell-val">'+esc(r.item)+'</div></div>';
+    if((r.type==='PR'||r.type==='ASSETPR')&&r.quantity)details+='<div class="req-cell"><div class="req-cell-lbl">Qty</div><div class="req-cell-val">'+esc(r.quantity)+'</div></div>';
+    if(r.estimatedCost)details+='<div class="req-cell"><div class="req-cell-lbl">Est. Cost</div><div class="req-cell-val">₹'+fa(parseFloat(r.estimatedCost)||0)+'</div></div>';
+    if(r.type==='WO'&&r.asset)details+='<div class="req-cell"><div class="req-cell-lbl">Asset</div><div class="req-cell-val">'+esc(r.asset)+'</div></div>';
+    if(r.type==='WO'&&r.assignee)details+='<div class="req-cell"><div class="req-cell-lbl">Assigned To</div><div class="req-cell-val">'+esc(r.assignee)+'</div></div>';
+    if(r.vendor)details+='<div class="req-cell"><div class="req-cell-lbl">Vendor</div><div class="req-cell-val">'+esc(r.vendor)+'</div></div>';
+    var showVals=(st==='Approved');
+    return '<div class="req-card">'
+      +'<div class="req-card-hd">'
+        +'<div>'
+          +'<div class="req-card-type">'+typeIcons[r.type]+' '+typeLabels[r.type]+'</div>'
+          +'<div class="req-card-title">'+esc(r.description)+'</div>'
+          +'<div class="req-card-meta">📅 '+fd(r.date)+' &nbsp;·&nbsp; 👤 '+esc(r.requestedBy)+'&nbsp;·&nbsp;<span style="color:'+priorityColors[r.priority||'Normal']+';font-weight:700;">⚡ '+esc(r.priority||'Normal')+'</span>'+(r.remarks?' &nbsp;·&nbsp; 💬 '+esc(r.remarks):'')+'</div>'
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0;">'
+          +'<span style="display:inline-block;background:'+stBg+';color:'+stColor+';border:1.5px solid '+stBorder+';border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;">'+stEmoji+' '+st+'</span>'
+        +'</div>'
+      +'</div>'
+      +(details?'<div class="req-card-body">'+details+'</div>':'')
+      +(showVals?'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px;background:#f0fff4;border-radius:10px;border:1px solid rgba(30,130,70,.2);margin-bottom:10px;">'
+        +'<div><div class="req-cell-lbl">✅ Approved Value</div><div class="req-cell-val c-approved">₹'+fa(r.approvedValue||0)+'</div></div>'
+        +'<div><div class="req-cell-lbl">🤝 Deal Closed Value</div><div class="req-cell-val c-approved">₹'+fa(r.dealClosedValue||0)+'</div></div>'
+        +'</div>':'')
+      +'<div class="req-card-acts">'
+        +'<div style="display:flex;flex-direction:column;gap:3px;"><div class="req-val-lbl">Status</div><select class="req-status-sel" id="rqst-'+r.id+'" onchange="onReqStatusChange(\''+r.id+'\')">'
+          +'<option value="Pending"'+(st==='Pending'?' selected':'')+'>⏳ Pending</option>'
+          +'<option value="Approved"'+(st==='Approved'?' selected':'')+'>✅ Approved</option>'
+          +'<option value="Rejected"'+(st==='Rejected'?' selected':'')+'>❌ Rejected</option>'
+        +'</select></div>'
+        +'<div class="req-val-wrap" id="rqav-wrap-'+r.id+'" style="display:'+(st==='Approved'?'flex':'none')+';">'
+          +'<div class="req-val-lbl">Approved Value (₹)</div>'
+          +'<input class="req-val-inp" type="number" id="rqav-'+r.id+'" placeholder="0.00" value="'+(r.approvedValue||'')+'" min="0" step="0.01">'
+        +'</div>'
+        +'<div class="req-val-wrap" id="rqdc-wrap-'+r.id+'" style="display:'+(st==='Approved'?'flex':'none')+';">'
+          +'<div class="req-val-lbl">Deal Closed Value (₹)</div>'
+          +'<input class="req-val-inp" type="number" id="rqdc-'+r.id+'" placeholder="0.00" value="'+(r.dealClosedValue||'')+'" min="0" step="0.01">'
+        +'</div>'
+        +'<button class="req-save-btn" onclick="updateReqStatus(\''+r.id+'\')">💾 Save</button>'
+        +'<button class="ebt" onclick="openSRForm(\''+r.id+'\')" style="margin-left:4px;">✎ Edit</button>'
+        +'<button class="req-del-btn" onclick="deleteRequest(\''+r.id+'\')">✕</button>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+
+function onReqStatusChange(id){
+  var st=document.getElementById('rqst-'+id).value;
+  var show=(st==='Approved');
+  document.getElementById('rqav-wrap-'+id).style.display=show?'flex':'none';
+  document.getElementById('rqdc-wrap-'+id).style.display=show?'flex':'none';
+}
+function exportAdminCSV(){var all=getAllBills();if(!all.length){toast('No bills','err');return;}var rows=[['Department','Submission Date','Invoice Date','Invoice No','PO/WO No','Vendor Name','Particulars','Amount (₹)']];all.forEach(function(b){rows.push([b._dl,fmtDate(b.submissionDate),fmtDate(b.invoiceDate),b.invoiceNo||'',b.poNumber||'',b.vendorName||'',b.particulars||'',b.amount||'']);});var csv=rows.map(function(r){return r.map(function(c){return'"'+(c+'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='GITAM_Hospitality_AllDepts_'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('CSV exported ✓');}
+function exportAdminExcel(){var all=getAllBills();if(!all.length){toast('No bills','err');return;}var wb=XLSX.utils.book_new();var sum=[['Department','Total Bills','Total Amount (₹)']];DO.forEach(function(k){var d=DEPTS[k];var arr=all.filter(function(b){return b._dk===k;});var amt=arr.reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);sum.push([d.label,arr.length,amt]);});var wsS=XLSX.utils.aoa_to_sheet(sum);wsS['!cols']=[{wch:24},{wch:12},{wch:16}];XLSX.utils.book_append_sheet(wb,wsS,'Summary');DO.forEach(function(k){var d=DEPTS[k];var arr=all.filter(function(b){return b._dk===k;});var rows=[['Submission Date','Invoice Date','Invoice No','PO/WO No','Vendor Name','Particulars','Amount (₹)']];arr.forEach(function(b){rows.push([fmtDate(b.submissionDate),fmtDate(b.invoiceDate),b.invoiceNo||'',b.poNumber||'',b.vendorName||'',b.particulars||'',parseFloat(b.amount)||0]);});var ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:14},{wch:12},{wch:16},{wch:16},{wch:28},{wch:32},{wch:14}];XLSX.utils.book_append_sheet(wb,ws,d.label.substring(0,31));});XLSX.writeFile(wb,'GITAM_Hospitality_AllDepts_'+new Date().toISOString().slice(0,10)+'.xlsx');toast('Excel exported ✓');}
 
 function fa(n){if(!n||isNaN(n))return'0';if(n>=10000000)return(n/10000000).toFixed(2).replace(/\.?0+$/,'')+'Cr';if(n>=100000)return(n/100000).toFixed(2).replace(/\.?0+$/,'')+'L';return n.toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:2});}
 function fas(n){if(n>=10000000)return(n/10000000).toFixed(1)+'Cr';if(n>=100000)return(n/100000).toFixed(1)+'L';if(n>=1000)return(n/1000).toFixed(1)+'k';return Math.round(n);}
@@ -865,7 +1232,12 @@ async function saveCredential(){
 }
 
 // Bootstrap: load credentials before login is interactive
-window.addEventListener('DOMContentLoaded',function(){loadCredentials();});
+window.addEventListener('DOMContentLoaded',function(){
+  loadCredentials();
+  // Initialize SR form field visibility
+  document.querySelectorAll('.sr-field').forEach(function(el){el.style.display='none';});
+  document.querySelectorAll('.sr-SR').forEach(function(el){el.style.display='flex';});
+});
 
 var _tt=null;
 function toast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className=type||'';void t.offsetWidth;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(function(){t.classList.remove('show');},2600);}
